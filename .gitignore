@@ -2,4 +2,26 @@
 venv/
 
 #Data files
-data/raw/
+backend/data/raw/*.csv
+
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Logs
+#logs/*.log
+
+# Environment variables
+.env
+
+# Compiled Python files
+__pycache__/
