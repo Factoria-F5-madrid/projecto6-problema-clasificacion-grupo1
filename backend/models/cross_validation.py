@@ -10,7 +10,7 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, 
     roc_auc_score, confusion_matrix, classification_report
 )
-from ..config.model_config import ModelConfig
+from config.model_config import ModelConfig
 
 class CrossValidator:
     """

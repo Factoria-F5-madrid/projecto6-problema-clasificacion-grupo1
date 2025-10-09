@@ -73,9 +73,58 @@ results = validator.evaluate_model(model, X, y)
 comparison = validator.compare_models(models_dict, X, y)
 ```
 
+### 3. `models/hyperparameter_tuning.py` ✅ **NUEVO**
+**¿Qué hace?**
+- **GridSearchCV**: Búsqueda exhaustiva de hiperparámetros (más lento, más preciso)
+- **RandomizedSearchCV**: Búsqueda aleatoria de hiperparámetros (más rápido)
+- **Comparación**: Compara ambos métodos automáticamente
+- **Compatible** con cualquier modelo de sklearn
+
+**¿Cómo lo usa Ciprian?**
+```python
+from backend.models.hyperparameter_tuning import HyperparameterTuner
+from backend.config.model_config import ModelConfig
+
+# Crear tuner
+tuner = HyperparameterTuner(cv_folds=5)
+
+# Obtener modelo y parámetros
+model = ModelConfig.get_model('random_forest')
+params = ModelConfig.get_hyperparameters('random_forest')
+
+# Opción 1: Grid Search (más lento, más preciso)
+grid_results = tuner.grid_search(model, params, X, y)
+
+# Opción 2: Randomized Search (más rápido)
+random_results = tuner.randomized_search(model, params, X, y, n_iter=100)
+
+# Opción 3: Comparar ambos métodos
+comparison = tuner.compare_methods(model, params, X, y)
+```
+
+**¿Cuándo usar cada método?**
+- **GridSearchCV**: Cuando tienes pocos hiperparámetros y tiempo suficiente
+- **RandomizedSearchCV**: Cuando tienes muchos hiperparámetros o poco tiempo
+- **compare_methods()**: Para decidir cuál método usar en tu caso específico
+
+## 🧪 **Testing the Framework:**
+
+Para probar que todo funciona correctamente:
+
+```bash
+# Desde la raíz del proyecto
+python backend/tests/test_simple.py
+```
+
+Este test verifica:
+- ✅ CrossValidator funciona correctamente
+- ✅ HyperparameterTuner (GridSearch y RandomizedSearch) funciona
+- ✅ Control de overfitting funciona
+- ✅ Todos los imports y dependencias están correctos
+
 ## 🔄 **Próximos Pasos:**
 
-1. **HyperparameterTuner** - Optimización automática de hiperparámetros
+1. ✅ **HyperparameterTuner** - Optimización automática de hiperparámetros
 2. **ModelEvaluator** - Evaluación detallada con visualizaciones
 3. **DataPreprocessor** - Preprocesamiento genérico de datos
 4. **ExperimentLogger** - Sistema de logging de experimentos
