@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
-from xgboost import XGBClassifier
+# from xgboost import XGBClassifier  # Temporarily disabled due to OpenMP issue
 
 class ModelConfig:
     """Configuration class for ML models and their hyperparameters"""
@@ -21,7 +21,7 @@ class ModelConfig:
         'svm': SVC(random_state=42),
         'naive_bayes': GaussianNB(),
         'decision_tree': DecisionTreeClassifier(random_state=42),
-        'xgboost': XGBClassifier(random_state=42, eval_metric='logloss')
+        # 'xgboost': XGBClassifier(random_state=42, eval_metric='logloss')  # Temporarily disabled
     }
     
     # Hyperparameter grids for optimization
@@ -57,12 +57,12 @@ class ModelConfig:
             'min_samples_leaf': [1, 2, 4],
             'criterion': ['gini', 'entropy']
         },
-        'xgboost': {
-            'n_estimators': [50, 100, 200],
-            'learning_rate': [0.01, 0.1, 0.2],
-            'max_depth': [3, 5, 7],
-            'subsample': [0.8, 0.9, 1.0]
-        }
+        # 'xgboost': {
+        #     'n_estimators': [50, 100, 200],
+        #     'learning_rate': [0.01, 0.1, 0.2],
+        #     'max_depth': [3, 5, 7],
+        #     'subsample': [0.8, 0.9, 1.0]
+        # }
     }
     
     # Cross-validation settings
