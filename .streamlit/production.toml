@@ -6,13 +6,14 @@ enableXsrfProtection = false
 runOnSave = false
 fileWatcherType = "none"
 maxUploadSize = 200
+maxMessageSize = 200
 
 [browser]
 gatherUsageStats = false
 serverAddress = "0.0.0.0"
 
-[theme]
-primaryColor = "#FF6B6B"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
+[logger]
+level = "error"
+
+[client]
+caching = true
