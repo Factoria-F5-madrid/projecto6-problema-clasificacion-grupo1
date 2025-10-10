@@ -6,15 +6,16 @@ Hemos creado un **sistema completo de optimización** para modelos de Machine Le
 
 ## ✅ **Resultados Obtenidos:**
 
-### **🏆 Mejor Modelo: NaiveBayes**
-- **Overfitting: 3.65%** ✅ (< 5% requerido)
-- **Accuracy: 81.3%** ✅ (> 70% requerido)
-- **Validación cruzada: 79.9%** ✅
+### **🏆 Mejor Modelo: LogisticRegression_L2_Enhanced**
+- **Overfitting: 1.52%** ✅ (< 5% requerido)
+- **Accuracy: 82.8%** ✅ (> 80% mejorado)
+- **Validación cruzada: 82.2%** ✅
 
 ### **📊 Métricas Detalladas:**
-- **Precision**: 78% (weighted avg)
-- **Recall**: 81% (weighted avg)
-- **F1-score**: 76% (weighted avg)
+- **Precision**: 88.2% (weighted avg) ⬆️ +10.2%
+- **Recall**: 82.8% (weighted avg) ⬆️ +1.8%
+- **F1-score**: 84.2% (weighted avg) ⬆️ +8.2%
+- **ROC AUC**: 90.6% ⬆️ Excelente discriminación
 
 ## 🛠️ **Herramientas Creadas:**
 
