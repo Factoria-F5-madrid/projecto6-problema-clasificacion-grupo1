@@ -57,19 +57,59 @@ def load_model():
         return None, None, None
 
 def predict_hate_speech(text, model, vectorizer):
-    """Predict hate speech for given text"""
+    """Predict hate speech for given text using hybrid approach"""
     try:
-        # Transform text
-        X = vectorizer.transform([text])
+        # Define offensive words rules
+        offensive_words = {
+            'hate_speech': [
+                'faggot', 'fag', 'faggots', 'fags', 'nigger', 'nigga', 'niggas', 'niggers',
+                'dyke', 'dykes', 'tranny', 'trannies', 'faggy', 'faggoty', 'niggah',
+                'white trash', 'cracker', 'crackers', 'chink', 'chinks', 'gook', 'gooks',
+                'wetback', 'wetbacks', 'spic', 'spics', 'kike', 'kikes', 'towelhead',
+                'towelheads', 'raghead', 'ragheads', 'sand nigger', 'sand niggers'
+            ],
+            'offensive_language': [
+                'bitch', 'bitches', 'hoes', 'hoe', 'pussy', 'pussies', 'ass', 'asshole',
+                'assholes', 'fuck', 'fucking', 'fucked', 'fucker', 'fuckers', 'shit',
+                'shits', 'shitty', 'damn', 'damned', 'hell', 'crap', 'crapper', 'dumb',
+                'dumbass', 'dumbasses', 'stupid', 'idiot', 'idiots', 'moron', 'morons',
+                'loser', 'losers', 'failure', 'failures', 'worthless', 'pathetic',
+                'disgusting', 'gross', 'nasty', 'ugly', 'fat', 'fats', 'skinny', 'skinnies'
+            ]
+        }
         
-        # Make prediction
-        prediction = model.predict(X)[0]
-        probability = model.predict_proba(X)[0]
+        def rule_based_classification(text):
+            """Apply rule-based classification for offensive words"""
+            text_lower = text.lower()
+            
+            # Check for hate speech words
+            hate_speech_count = sum(1 for word in offensive_words['hate_speech'] if word in text_lower)
+            offensive_count = sum(1 for word in offensive_words['offensive_language'] if word in text_lower)
+            
+            if hate_speech_count > 0:
+                return 0, 0.9  # Hate Speech with high confidence
+            elif offensive_count > 0:
+                return 1, 0.8  # Offensive Language with high confidence
+            else:
+                return None, 0.0  # No rule-based classification
         
-        # Get class names
-        class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
+        # First try rule-based classification
+        rule_pred, rule_conf = rule_based_classification(text)
         
-        return class_names[prediction], probability[prediction]
+        if rule_pred is not None:
+            # Use rule-based classification
+            class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
+            return class_names[rule_pred], rule_conf
+        else:
+            # Use ML model
+            X = vectorizer.transform([text])
+            prediction = model.predict(X)[0]
+            probability = model.predict_proba(X)[0]
+            
+            # Get class names
+            class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
+            
+            return class_names[prediction], probability[prediction]
     except Exception as e:
         return f"Error: {e}", 0
 
@@ -81,7 +121,8 @@ def main():
         st.warning("No se pudo cargar la imagen del banner")
     
     st.title("🚨 Hate Speech Detection System")
-    st.markdown("**Sistema de detección de discurso de odio optimizado con 84.2% F1-score y 1.52% overfitting**")
+    st.markdown("**Sistema híbrido de detección de discurso de odio con reglas específicas + ML optimizado**")
+    st.info("🔧 **Modelo Híbrido**: Combina reglas específicas para palabras ofensivas con Machine Learning para mayor precisión")
     
     # Load model
     with st.spinner("Cargando modelo optimizado..."):
