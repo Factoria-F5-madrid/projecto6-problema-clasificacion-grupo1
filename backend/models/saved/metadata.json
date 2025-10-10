@@ -1,0 +1,30 @@
+{
+  "model_type": "LogisticRegression",
+  "vectorizer_type": "TfidfVectorizer",
+  "train_score": 0.8334375,
+  "test_score": 0.836875,
+  "overfitting": -0.41244844394450475,
+  "n_features": 2000,
+  "n_samples": 8000,
+  "class_distribution": {
+    "1": 6196,
+    "2": 1353,
+    "0": 451
+  },
+  "parameters": {
+    "penalty": "l2",
+    "C": 0.01,
+    "class_weight": "balanced",
+    "max_iter": 2000,
+    "solver": "lbfgs"
+  },
+  "vectorizer_params": {
+    "max_features": 2000,
+    "ngram_range": [
+      1,
+      3
+    ],
+    "min_df": 2,
+    "max_df": 0.95
+  }
+}
