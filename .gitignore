@@ -3,6 +3,7 @@ venv/
 
 #Data files
 backend/data/raw/*.csv
+backend/models/*.json
 
 
 # macOS
@@ -25,3 +26,9 @@ Thumbs.db
 
 # Compiled Python files
 __pycache__/
+
+# Ignore .md files in tests and backend folders
+backend/tests/*.md
+backend/BASELINE_RESULTS*.md
+backend/notebooks/baseline_analytics.ipynb
+backend/notebooks/baseline.ipynb
