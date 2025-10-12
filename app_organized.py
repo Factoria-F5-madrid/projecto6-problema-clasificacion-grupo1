@@ -22,6 +22,7 @@ from models.ultimate_hybrid_system import UltimateHybridSystem
 
 # Import MLOps components
 from mlops.ab_testing import ABTestingSystem
+from mlops.data_drift_monitor import DataDriftMonitor
 
 # Page config
 st.set_page_config(
@@ -62,6 +63,7 @@ def main():
             "🧪 Casos de Prueba",
             "📈 Métricas del Sistema",
             "🔬 A/B Testing (MLOps)",
+            "📊 Data Drift Monitoring (MLOps)",
             "⚙️ Configuración Avanzada"
         ]
     )
@@ -92,6 +94,8 @@ def main():
         metrics_page()
     elif menu == "🔬 A/B Testing (MLOps)":
         ab_testing_page(systems, ab_system)
+    elif menu == "📊 Data Drift Monitoring (MLOps)":
+        data_drift_page()
     elif menu == "⚙️ Configuración Avanzada":
         config_page()
 
@@ -627,6 +631,256 @@ def ab_testing_page(systems, ab_system):
         )
         
         st.plotly_chart(fig, use_container_width=True)
+
+def data_drift_page():
+    """Página de Data Drift Monitoring para MLOps"""
+    st.header("📊 Data Drift Monitoring (MLOps)")
+    st.markdown("**Nivel Experto - Monitoreo de Cambios en los Datos**")
+    
+    # Importar pandas
+    import pandas as pd
+    
+    # Inicializar el monitor de drift
+    @st.cache_resource
+    def load_drift_monitor():
+        return DataDriftMonitor()
+    
+    drift_monitor = load_drift_monitor()
+    
+    # Tabs para diferentes funcionalidades
+    tab1, tab2, tab3, tab4 = st.tabs(["🔧 Configurar Referencia", "📊 Monitorear Drift", "📈 Historial", "ℹ️ Información"])
+    
+    with tab1:
+        st.subheader("🔧 Configurar Datos de Referencia")
+        st.markdown("**Establece el dataset de entrenamiento como referencia para detectar cambios**")
+        
+        # Cargar datos de referencia
+        if st.button("🔄 Cargar Dataset de Entrenamiento como Referencia"):
+            try:
+                # Cargar datos del CSV
+                df = pd.read_csv('backend/data/processed/cleaned_tweets.csv')
+                
+                # Obtener textos
+                texts = df['clean_tweet_improved'].dropna().tolist()
+                
+                # Configurar referencia
+                drift_monitor.set_reference_data(texts)
+                
+                st.success(f"✅ Datos de referencia configurados: {len(texts)} textos")
+                
+            except Exception as e:
+                st.error(f"❌ Error cargando datos: {e}")
+        
+        # Mostrar estado actual
+        if drift_monitor.load_reference_data():
+            st.info("✅ Datos de referencia ya configurados")
+        else:
+            st.warning("⚠️ No hay datos de referencia configurados")
+    
+    with tab2:
+        st.subheader("📊 Monitorear Drift en Tiempo Real")
+        st.markdown("**Analiza nuevos datos para detectar cambios respecto al dataset de entrenamiento**")
+        
+        # Input de texto para análisis
+        st.markdown("**🔍 Analizar Textos Nuevos**")
+        
+        # Opción 1: Texto individual
+        text_input = st.text_area(
+            "Ingresa texto para analizar:",
+            placeholder="Escribe aquí el texto que quieres analizar...",
+            height=100
+        )
+        
+        if st.button("🔍 Analizar Drift") and text_input:
+            try:
+                # Analizar drift
+                report = drift_monitor.detect_drift([text_input], "live_analysis")
+                
+                # Mostrar resultados
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    if report['drift_detected']:
+                        st.error(f"🚨 **Drift Detectado**")
+                    else:
+                        st.success(f"✅ **Sin Drift**")
+                
+                with col2:
+                    severity_colors = {
+                        'critical': '🔴',
+                        'moderate': '🟡', 
+                        'low': '🟢'
+                    }
+                    st.metric(
+                        "Severidad",
+                        f"{severity_colors.get(report['drift_severity'], '⚪')} {report['drift_severity'].title()}"
+                    )
+                
+                with col3:
+                    st.metric(
+                        "Score de Drift",
+                        f"{report['drift_score']:.3f}"
+                    )
+                
+                # Mostrar métricas detalladas
+                st.markdown("**📊 Métricas Detalladas**")
+                
+                metrics = report['metrics']
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.metric("KL Divergence", f"{metrics.get('kl_divergence', 0):.3f}")
+                    st.metric("Drift en Longitud", f"{metrics.get('length_drift', 0):.3f}")
+                
+                with col2:
+                    st.metric("Drift en Palabras", f"{metrics.get('word_count_drift', 0):.3f}")
+                    st.metric("Drift en Sparsity", f"{metrics.get('sparsity_drift', 0):.3f}")
+                
+                # Mostrar alertas
+                if report['alerts']:
+                    st.markdown("**⚠️ Alertas**")
+                    for alert in report['alerts']:
+                        st.warning(f"• {alert}")
+                
+            except Exception as e:
+                st.error(f"❌ Error en el análisis: {e}")
+        
+        # Opción 2: Cargar archivo
+        st.markdown("---")
+        st.markdown("**📁 Analizar Archivo CSV**")
+        
+        uploaded_file = st.file_uploader(
+            "Sube un archivo CSV con textos para analizar:",
+            type=['csv'],
+            help="El archivo debe tener una columna con textos"
+        )
+        
+        if uploaded_file is not None:
+            try:
+                df = pd.read_csv(uploaded_file)
+                
+                # Seleccionar columna de texto
+                text_column = st.selectbox(
+                    "Selecciona la columna con textos:",
+                    df.columns
+                )
+                
+                if st.button("📊 Analizar Archivo Completo"):
+                    texts = df[text_column].dropna().tolist()
+                    
+                    with st.spinner("Analizando drift..."):
+                        report = drift_monitor.detect_drift(texts, f"file_{uploaded_file.name}")
+                    
+                    # Mostrar resumen
+                    st.success(f"✅ Análisis completado: {len(texts)} textos procesados")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.metric("Textos Analizados", len(texts))
+                    
+                    with col2:
+                        st.metric("Drift Detectado", "Sí" if report['drift_detected'] else "No")
+                    
+                    with col3:
+                        st.metric("Score Promedio", f"{report['drift_score']:.3f}")
+                    
+            except Exception as e:
+                st.error(f"❌ Error procesando archivo: {e}")
+    
+    with tab3:
+        st.subheader("📈 Historial de Drift")
+        st.markdown("**Revisa el historial de análisis de drift**")
+        
+        # Obtener historial
+        history = drift_monitor.get_drift_history()
+        
+        if history:
+            st.markdown(f"**📊 Total de Análisis: {len(history)}**")
+            
+            # Mostrar tabla de historial
+            history_data = []
+            for report in history[-10:]:  # Últimos 10
+                history_data.append({
+                    'Fecha': report['timestamp'][:19],
+                    'Ventana': report['window_name'],
+                    'Muestras': report['new_samples'],
+                    'Drift': 'Sí' if report['drift_detected'] else 'No',
+                    'Severidad': report['drift_severity'],
+                    'Score': f"{report['drift_score']:.3f}",
+                    'Alertas': len(report['alerts'])
+                })
+            
+            df_history = pd.DataFrame(history_data)
+            st.dataframe(df_history, use_container_width=True)
+            
+            # Gráfico de evolución
+            if len(history) > 1:
+                import plotly.graph_objects as go
+                
+                dates = [h['timestamp'][:10] for h in history]
+                scores = [h['drift_score'] for h in history]
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=dates,
+                    y=scores,
+                    mode='lines+markers',
+                    name='Drift Score',
+                    line=dict(color='red', width=2)
+                ))
+                
+                # Línea de umbral
+                fig.add_hline(
+                    y=0.1, 
+                    line_dash="dash", 
+                    line_color="orange",
+                    annotation_text="Umbral de Drift (0.1)"
+                )
+                
+                fig.update_layout(
+                    title="Evolución del Drift Score",
+                    xaxis_title="Fecha",
+                    yaxis_title="Drift Score",
+                    hovermode='x unified'
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("📭 No hay historial de drift disponible")
+    
+    with tab4:
+        st.subheader("ℹ️ Información sobre Data Drift")
+        st.markdown("""
+        **¿Qué es Data Drift?**
+        
+        Data Drift ocurre cuando la distribución de los datos de producción cambia respecto a los datos de entrenamiento. Esto puede causar:
+        
+        - **📉 Degradación del rendimiento** del modelo
+        - **🎯 Predicciones incorrectas** en nuevos datos
+        - **⚠️ Necesidad de reentrenamiento** del modelo
+        
+        **Métricas que monitoreamos:**
+        
+        - **KL Divergence**: Mide diferencias en distribuciones de características
+        - **Drift en Longitud**: Cambios en la longitud promedio de textos
+        - **Drift en Palabras**: Cambios en el conteo promedio de palabras
+        - **Drift en Sparsity**: Cambios en la densidad de características
+        - **Test KS**: Significancia estadística de las diferencias
+        
+        **Umbrales de Alerta:**
+        
+        - 🟢 **Bajo Drift** (< 0.1): Cambios menores, modelo estable
+        - 🟡 **Drift Moderado** (0.1 - 0.2): Cambios notables, monitorear
+        - 🔴 **Drift Crítico** (> 0.2): Cambios significativos, considerar reentrenamiento
+        
+        **Recomendaciones:**
+        
+        1. **Monitorear regularmente** los datos de producción
+        2. **Configurar alertas** automáticas para drift crítico
+        3. **Reentrenar el modelo** cuando el drift sea persistente
+        4. **Documentar cambios** en el dominio o contexto de uso
+        """)
 
 if __name__ == "__main__":
     main()
