@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 import pickle
+import joblib
 import sys
 import os
 from dotenv import load_dotenv
@@ -24,51 +25,93 @@ from utils.api_neutrino import neutrino_detector
 from utils.api_ninja import ninja_detector
 from utils.api_perspective import perspective_detector
 
+# Import robust preprocessor
+from utils.robust_preprocessor import RobustPreprocessor
+from utils.confidence_booster import ConfidenceBooster
+
 st.set_page_config(page_title='Hate Speech Detection', layout="wide",
 				   initial_sidebar_state="collapsed")
 
 # Load the optimized model and vectorizer
 @st.cache_resource
 def load_model():
-    """Load the optimized model and vectorizer"""
+    """Load the balanced model and vectorizer"""
     try:
-        # Load the cleaned data to retrain the model
-        df = pd.read_csv("backend/data/processed/cleaned_tweets.csv")
+        # Try to load improved model first
+        improved_model_path = "backend/models/saved/improved_model.pkl"
+        improved_vectorizer_path = "backend/models/saved/improved_vectorizer.pkl"
         
-        # Prepare data
-        X_text = df['clean_tweet_improved'].fillna('')
-        y = df['class']
+        if os.path.exists(improved_model_path) and os.path.exists(improved_vectorizer_path):
+            st.info("🚀 Cargando modelo mejorado (incluye palabras ofensivas importantes)...")
+            model = joblib.load(improved_model_path)
+            vectorizer = joblib.load(improved_vectorizer_path)
+            
+            # Load data for display
+            df = pd.read_csv("backend/data/processed/cleaned_tweets.csv")
+            return model, vectorizer, df
         
-        # Create vectorizer with same parameters as our optimized model
-        vectorizer = TfidfVectorizer(
-            max_features=2000, 
-            stop_words='english', 
-            ngram_range=(1,3),
-            min_df=2,
-            max_df=0.95
-        )
-        X = vectorizer.fit_transform(X_text)
+        # Fallback to balanced model
+        balanced_model_path = "backend/models/saved/balanced_model.pkl"
+        balanced_vectorizer_path = "backend/models/saved/balanced_vectorizer.pkl"
         
-        # Create optimized model
-        model = LogisticRegression(
-            penalty='l2', 
-            C=0.01,
-            random_state=42, 
-            max_iter=2000,
-            class_weight='balanced'
-        )
-        
-        # Train the model
-        model.fit(X, y)
-        
-        return model, vectorizer, df
+        if os.path.exists(balanced_model_path) and os.path.exists(balanced_vectorizer_path):
+            st.info("🔄 Cargando modelo balanceado (mejor precisión)...")
+            model = joblib.load(balanced_model_path)
+            vectorizer = joblib.load(balanced_vectorizer_path)
+            
+            # Load data for display
+            df = pd.read_csv("backend/data/processed/cleaned_tweets.csv")
+            return model, vectorizer, df
+        else:
+            # Fallback to original model
+            st.warning("⚠️ Modelo balanceado no encontrado, usando modelo original...")
+            df = pd.read_csv("backend/data/processed/cleaned_tweets.csv")
+            
+            # Prepare data
+            X_text = df['clean_tweet_improved'].fillna('')
+            y = df['class']
+            
+            # Create vectorizer
+            vectorizer = TfidfVectorizer(
+                max_features=2000, 
+                stop_words='english', 
+                ngram_range=(1,3),
+                min_df=2,
+                max_df=0.95
+            )
+            X = vectorizer.fit_transform(X_text)
+            
+            # Create optimized model
+            model = LogisticRegression(
+                penalty='l2', 
+                C=0.01,
+                random_state=42, 
+                max_iter=2000,
+                class_weight='balanced'
+            )
+            
+            # Train the model
+            model.fit(X, y)
+            
+            return model, vectorizer, df
     except Exception as e:
         st.error(f"Error loading model: {e}")
         return None, None, None
 
-def predict_hate_speech(text, model, vectorizer):
-    """Predict hate speech for given text using hybrid approach with APIs"""
+def predict_hate_speech(text, model, vectorizer, preprocessor=None, confidence_booster=None):
+    """Predict hate speech for given text using hybrid approach with APIs and preprocessing"""
     try:
+        # Preprocess text if preprocessor is available
+        if preprocessor:
+            preprocessed = preprocessor.preprocess_text(
+                text,
+                normalize_evasions=True,
+                clean_text=True,
+                extract_features=True
+            )
+            processed_text = preprocessed['processed_text']
+        else:
+            processed_text = text
         # Nivel 1: API Verve (si está disponible)
         if verve_detector.is_available():
             verve_result = verve_detector.detect_hate_speech(text)
@@ -163,15 +206,27 @@ def predict_hate_speech(text, model, vectorizer):
             class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
             return class_names[rule_pred], rule_conf
         else:
-            # Nivel 6: ML model (fallback final)
-            X = vectorizer.transform([text])
+            # Nivel 6: ML model (fallback final) - Use processed text
+            X = vectorizer.transform([processed_text])
             prediction = model.predict(X)[0]
-            probability = model.predict_proba(X)[0]
+            probabilities = model.predict_proba(X)[0]
+            
+            # Apply confidence booster if available
+            if confidence_booster:
+                classes = ['Hate Speech', 'Offensive Language', 'Neither']
+                boosted_probs, explanation = confidence_booster.boost_confidence(
+                    processed_text, probabilities, classes
+                )
+                # Use boosted probabilities for final prediction
+                prediction = np.argmax(boosted_probs)
+                probability = boosted_probs[prediction]
+            else:
+                probability = probabilities[prediction]
             
             # Get class names
             class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
             
-            return class_names[prediction], probability[prediction]
+            return class_names[prediction], probability
     except Exception as e:
         return f"Error: {e}", 0
 
@@ -194,6 +249,10 @@ def main():
         st.error("No se pudo cargar el modelo. Verifica que los datos estén disponibles.")
         return
     
+    # Initialize preprocessor and confidence booster
+    preprocessor = RobustPreprocessor()
+    confidence_booster = ConfidenceBooster()
+    
     # Sidebar for navigation
     st.sidebar.header("🧭 Navegación")
     page = st.sidebar.selectbox("Selecciona una página:", 
@@ -211,7 +270,7 @@ def main():
         if st.button("🔍 Analizar Texto", type="primary"):
             if text_input.strip():
                 with st.spinner("Analizando..."):
-                    prediction, confidence = predict_hate_speech(text_input, model, vectorizer)
+                    prediction, confidence = predict_hate_speech(text_input, model, vectorizer, preprocessor, confidence_booster)
                 
                 # Display results
                 col1, col2 = st.columns(2)
@@ -230,11 +289,92 @@ def main():
                 else:
                     st.success("✅ **TEXTO NORMAL** - Este texto no contiene discurso de odio")
                 
+                # Show preprocessing details
+                st.subheader("🔧 Preprocesamiento")
+                preprocessed = preprocessor.preprocess_text(
+                    text_input,
+                    normalize_evasions=True,
+                    clean_text=True,
+                    extract_features=True
+                )
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**📝 Texto Original:**")
+                    st.code(text_input, language=None)
+                
+                with col2:
+                    st.markdown("**🔄 Texto Procesado:**")
+                    st.code(preprocessed['processed_text'], language=None)
+                
+                # Show evasions found
+                if preprocessed['evasions_found']:
+                    st.markdown("**🚫 Evasiones Detectadas y Normalizadas:**")
+                    for evasion in preprocessed['evasions_found']:
+                        st.markdown(f"- `{evasion}`")
+                else:
+                    st.markdown("**✅ No se detectaron evasiones**")
+                
+                # Show features
+                features = preprocessed['features']
+                st.markdown("**📊 Características Extraídas:**")
+                st.json({
+                    "Longitud": features.get('length', 0),
+                    "Palabras": features.get('word_count', 0),
+                    "Mayúsculas": f"{features.get('uppercase_ratio', 0):.1%}",
+                    "Evasión": features.get('has_evasion', False),
+                    "Repetición": f"{features.get('repetition_ratio', 0):.1%}"
+                })
+                
                 # Show probability breakdown
                 st.subheader("📊 Desglose de Probabilidades")
-                X = vectorizer.transform([text_input])
+                X = vectorizer.transform([preprocessed['processed_text']])
                 probabilities = model.predict_proba(X)[0]
                 classes = ['Hate Speech', 'Offensive Language', 'Neither']
+                
+                # Create detailed probability breakdown
+                prob_data = []
+                for i, (class_name, prob) in enumerate(zip(classes, probabilities)):
+                    prob_data.append({
+                        'Clase': class_name,
+                        'Probabilidad': f"{prob:.1%}",
+                        'Valor': prob,
+                        'Barra': prob
+                    })
+                
+                prob_df = pd.DataFrame(prob_data)
+                
+                # Show probabilities as bars
+                st.markdown("**🎯 Probabilidades por Clase:**")
+                for _, row in prob_df.iterrows():
+                    col1, col2, col3 = st.columns([2, 6, 1])
+                    with col1:
+                        st.write(f"**{row['Clase']}**")
+                    with col2:
+                        st.progress(row['Valor'], text=f"{row['Probabilidad']}")
+                    with col3:
+                        if row['Valor'] == max(probabilities):
+                            st.write("🏆")
+                
+                # Show raw probabilities
+                st.markdown("**📈 Valores Numéricos:**")
+                for i, (class_name, prob) in enumerate(zip(classes, probabilities)):
+                    st.write(f"- **{class_name}**: {prob:.4f} ({prob:.1%})")
+                
+                # Analysis
+                max_prob = max(probabilities)
+                max_class = classes[probabilities.argmax()]
+                second_max = sorted(probabilities, reverse=True)[1]
+                difference = max_prob - second_max
+                
+                st.markdown("**🔍 Análisis:**")
+                if difference > 0.3:
+                    st.success(f"✅ **Clasificación clara**: {max_class} con {max_prob:.1%} de confianza")
+                elif difference > 0.1:
+                    st.warning(f"⚠️ **Clasificación moderada**: {max_class} con {max_prob:.1%} de confianza (diferencia: {difference:.1%})")
+                else:
+                    st.error(f"❌ **Clasificación incierta**: {max_class} con {max_prob:.1%} de confianza (diferencia: {difference:.1%})")
                 
                 prob_df = pd.DataFrame({
                     'Clase': classes,
