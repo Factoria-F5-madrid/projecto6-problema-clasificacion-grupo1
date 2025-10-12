@@ -1,0 +1,11 @@
+# API Verve - Hate Speech Detection
+VERVE_API_KEY=tu_api_key_de_verve_aqui
+
+# Google Perspective API
+PERSPECTIVE_API_KEY=tu_google_api_key_aqui
+
+# Neutrino API
+NEUTRINO_API_KEY=ZBx00tE5qDKO3FRbPqogTnoYzidLL4Tcj7FWX9zgYJ1oDDoP
+
+# API Ninja
+NINJA_API_KEY=tu_api_key_con_==_aqui

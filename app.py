@@ -6,6 +6,10 @@ import numpy as np
 import pickle
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Add backend to path for imports
 sys.path.append('backend')
@@ -13,6 +17,9 @@ sys.path.append('backend')
 # Import our optimized model components
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+
+# Import API detectors
+from utils.api_verve import verve_detector
 
 st.set_page_config(page_title='Hate Speech Detection', layout="wide",
 				   initial_sidebar_state="collapsed")
@@ -57,24 +64,58 @@ def load_model():
         return None, None, None
 
 def predict_hate_speech(text, model, vectorizer):
-    """Predict hate speech for given text using hybrid approach"""
+    """Predict hate speech for given text using hybrid approach with APIs"""
     try:
-        # Define offensive words rules
+        # Nivel 1: API Verve (si está disponible)
+        if verve_detector.is_available():
+            verve_result = verve_detector.detect_hate_speech(text)
+            if "error" not in verve_result and verve_result['confidence'] > 0.7:
+                return verve_result['classification'], verve_result['confidence']
+        
+        # Nivel 2: Reglas básicas (fallback)
         offensive_words = {
             'hate_speech': [
+                # English hate speech
                 'faggot', 'fag', 'faggots', 'fags', 'nigger', 'nigga', 'niggas', 'niggers',
                 'dyke', 'dykes', 'tranny', 'trannies', 'faggy', 'faggoty', 'niggah',
                 'white trash', 'cracker', 'crackers', 'chink', 'chinks', 'gook', 'gooks',
                 'wetback', 'wetbacks', 'spic', 'spics', 'kike', 'kikes', 'towelhead',
-                'towelheads', 'raghead', 'ragheads', 'sand nigger', 'sand niggers'
+                'towelheads', 'raghead', 'ragheads', 'sand nigger', 'sand niggers',
+                # Spanish hate speech
+                'maricón', 'maricones', 'puto', 'putos', 'joto', 'jotos', 'culero', 'culeros',
+                'pinche', 'pinches', 'cabrón', 'cabrones', 'hijo de puta', 'hijos de puta',
+                'mamón', 'mamones', 'pendejo', 'pendejos', 'idiota', 'idiotas', 'imbécil', 'imbéciles',
+                'estúpido', 'estúpidos', 'tonto', 'tontos', 'pendeja', 'pendejas', 'puta', 'putas',
+                'zorra', 'zorras', 'perra', 'perras', 'cabrona', 'cabronas', 'mamona', 'mamonas'
             ],
             'offensive_language': [
+                # English offensive
                 'bitch', 'bitches', 'hoes', 'hoe', 'pussy', 'pussies', 'ass', 'asshole',
                 'assholes', 'fuck', 'fucking', 'fucked', 'fucker', 'fuckers', 'shit',
                 'shits', 'shitty', 'damn', 'damned', 'hell', 'crap', 'crapper', 'dumb',
                 'dumbass', 'dumbasses', 'stupid', 'idiot', 'idiots', 'moron', 'morons',
                 'loser', 'losers', 'failure', 'failures', 'worthless', 'pathetic',
-                'disgusting', 'gross', 'nasty', 'ugly', 'fat', 'fats', 'skinny', 'skinnies'
+                'disgusting', 'gross', 'nasty', 'ugly', 'fat', 'fats', 'skinny', 'skinnies',
+                # Spanish offensive
+                'pendejo', 'pendejos', 'pendeja', 'pendejas', 'idiota', 'idiotas', 'imbécil', 'imbéciles',
+                'estúpido', 'estúpidos', 'tonto', 'tontos', 'baboso', 'babosos', 'babosa', 'babosas',
+                'pendejada', 'pendejadas', 'estupidez', 'estupideces', 'imbecilidad', 'imbecilidades',
+                'mamada', 'mamadas', 'pendejear', 'pendejeando', 'pendejeado', 'pendejeada',
+                'chingar', 'chingado', 'chingada', 'chingados', 'chingadas', 'chinga', 'chingas',
+                'verga', 'vergas', 'pinche', 'pinches', 'cabrón', 'cabrones', 'cabrona', 'cabronas',
+                'hijo de puta', 'hijos de puta', 'hija de puta', 'hijas de puta', 'puto', 'putos',
+                'puta', 'putas', 'zorra', 'zorras', 'perra', 'perras', 'mamón', 'mamones',
+                'mamona', 'mamonas', 'mamada', 'mamadas', 'mamar', 'mamando', 'mamado', 'mamada',
+                'culero', 'culeros', 'culera', 'culeras', 'culiar', 'culiando', 'culiado', 'culiada',
+                'joto', 'jotos', 'jota', 'jotas', 'maricón', 'maricones', 'marica', 'maricas',
+                'gay', 'gays', 'lesbiana', 'lesbianas', 'lesbiano', 'lesbianos', 'homosexual', 'homosexuales',
+                'transexual', 'transexuales', 'travesti', 'travestis', 'travestido', 'travestidos',
+                'puto', 'putos', 'puta', 'putas', 'prostituta', 'prostitutas', 'prostituto', 'prostitutos',
+                'zorra', 'zorras', 'perra', 'perras', 'cabrona', 'cabronas', 'mamona', 'mamonas',
+                'hijo de perra', 'hijos de perra', 'hija de perra', 'hijas de perra',
+                'hijo de zorra', 'hijos de zorra', 'hija de zorra', 'hijas de zorra',
+                'hijo de cabrón', 'hijos de cabrón', 'hija de cabrón', 'hijas de cabrón',
+                'hijo de cabrona', 'hijos de cabrona', 'hija de cabrona', 'hijas de cabrona'
             ]
         }
         
@@ -93,7 +134,7 @@ def predict_hate_speech(text, model, vectorizer):
             else:
                 return None, 0.0  # No rule-based classification
         
-        # First try rule-based classification
+        # Try rule-based classification
         rule_pred, rule_conf = rule_based_classification(text)
         
         if rule_pred is not None:
@@ -101,7 +142,7 @@ def predict_hate_speech(text, model, vectorizer):
             class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
             return class_names[rule_pred], rule_conf
         else:
-            # Use ML model
+            # Nivel 3: ML model (fallback final)
             X = vectorizer.transform([text])
             prediction = model.predict(X)[0]
             probability = model.predict_proba(X)[0]

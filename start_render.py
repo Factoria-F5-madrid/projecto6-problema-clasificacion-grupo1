@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Optimized start script for Render deployment
 """
