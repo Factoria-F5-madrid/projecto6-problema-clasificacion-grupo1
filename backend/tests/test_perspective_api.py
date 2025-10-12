@@ -1,28 +1,30 @@
 """
-Test script for Neutrino API with temporary API key
+Test script for Google Perspective API integration
 """
 
 import sys
 import os
 sys.path.append('backend')
 
-# Configurar API key temporalmente
-os.environ['NEUTRINO_API_KEY'] = 'ZBx00tE5qDKO3FRbPqogTnoYzidLL4Tcj7FWX9zgYJ1oDDoP'
+from dotenv import load_dotenv
+from utils.api_perspective import perspective_detector
 
-from utils.api_neutrino import neutrino_detector
-
-def test_neutrino_api():
-    """Test Neutrino API with sample texts"""
+def test_perspective_api():
+    """Test Google Perspective API with sample texts"""
     
-    print("🧪 TESTING NEUTRINO API")
+    # Cargar variables de entorno
+    load_dotenv()
+    
+    print("🧪 TESTING GOOGLE PERSPECTIVE API")
     print("=" * 50)
     
     # Verificar si la API está disponible
-    if not neutrino_detector.is_available():
-        print("❌ Neutrino API no está configurada")
+    if not perspective_detector.is_available():
+        print("❌ Google Perspective API no está configurada")
+        print("   Asegúrate de tener PERSPECTIVE_API_KEY en tu archivo .env")
         return
     
-    print("✅ Neutrino API configurada correctamente")
+    print("✅ Google Perspective API configurada correctamente")
     print()
     
     # Textos de prueba
@@ -34,7 +36,9 @@ def test_neutrino_api():
         "Good morning everyone", # Texto positivo
         "You are a fucking idiot", # Múltiples palabras ofensivas
         "I hate you so much",   # Posible hate speech
-        "What a beautiful day"  # Texto positivo
+        "What a beautiful day",  # Texto positivo
+        "You are a faggot",     # Hate speech
+        "I will kill you"       # Threat
     ]
     
     print("📝 Probando textos:")
@@ -44,7 +48,7 @@ def test_neutrino_api():
         print(f"\n{i}. Texto: '{text}'")
         
         # Llamar a la API
-        result = neutrino_detector.detect_profanity(text)
+        result = perspective_detector.detect_toxicity(text)
         
         # Mostrar resultados
         if "error" in result:
@@ -53,13 +57,14 @@ def test_neutrino_api():
             print(f"   ✅ Clasificación: {result['classification']}")
             print(f"   📊 Confianza: {result['confidence']:.2f}")
             print(f"   🔍 Fuente: {result['source']}")
-            print(f"   🚫 Palabras ofensivas: {result.get('bad_words', [])}")
-            print(f"   📈 Total palabras ofensivas: {result.get('bad_words_count', 0)}")
-            if result.get('censored_text') != text:
-                print(f"   🔒 Texto censurado: '{result.get('censored_text', '')}'")
+            print(f"   🚫 Tipo principal: {result.get('main_toxicity_type', 'N/A')}")
+            print(f"   📈 Score principal: {result.get('main_toxicity_score', 0):.2f}")
+            print(f"   🎯 Toxicidad: {result.get('toxicity_score', 0):.2f}")
+            print(f"   ⚠️  Insulto: {result.get('insult', 0):.2f}")
+            print(f"   💀 Amenaza: {result.get('threat', 0):.2f}")
     
     print("\n" + "=" * 50)
     print("✅ Prueba completada")
 
 if __name__ == "__main__":
-    test_neutrino_api()
+    test_perspective_api()

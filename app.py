@@ -22,6 +22,7 @@ from sklearn.linear_model import LogisticRegression
 from utils.api_verve import verve_detector
 from utils.api_neutrino import neutrino_detector
 from utils.api_ninja import ninja_detector
+from utils.api_perspective import perspective_detector
 
 st.set_page_config(page_title='Hate Speech Detection', layout="wide",
 				   initial_sidebar_state="collapsed")
@@ -86,7 +87,13 @@ def predict_hate_speech(text, model, vectorizer):
             if "error" not in ninja_result and ninja_result['confidence'] > 0.6:
                 return ninja_result['classification'], ninja_result['confidence']
         
-        # Nivel 4: Reglas básicas (fallback)
+        # Nivel 4: Google Perspective API (si está disponible)
+        if perspective_detector.is_available():
+            perspective_result = perspective_detector.detect_toxicity(text)
+            if "error" not in perspective_result and perspective_result['confidence'] > 0.7:
+                return perspective_result['classification'], perspective_result['confidence']
+        
+        # Nivel 5: Reglas básicas (fallback)
         offensive_words = {
             'hate_speech': [
                 # English hate speech
@@ -156,7 +163,7 @@ def predict_hate_speech(text, model, vectorizer):
             class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
             return class_names[rule_pred], rule_conf
         else:
-            # Nivel 5: ML model (fallback final)
+            # Nivel 6: ML model (fallback final)
             X = vectorizer.transform([text])
             prediction = model.predict(X)[0]
             probability = model.predict_proba(X)[0]

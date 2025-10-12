@@ -11,7 +11,7 @@ class VerveAPIDetector:
     
     def __init__(self):
         self.api_key = os.getenv('VERVE_API_KEY')
-        self.base_url = "https://api.verve.com/v1"  # URL base de Verve
+        self.base_url = "https://api.apiverve.com/v1/profanityfilter"  # URL correcta
         self.timeout = 10  # 10 segundos timeout
     
     def detect_hate_speech(self, text: str) -> Dict[str, Any]:
@@ -39,16 +39,15 @@ class VerveAPIDetector:
                 "Content-Type": "application/json"
             }
             
-            # Preparar payload
+            # Preparar payload según documentación de API Verve
             payload = {
                 "text": text,
-                "language": "auto",  # Detección automática de idioma
-                "include_confidence": True
+                "mask": "*"  # Caracter para enmascarar palabras ofensivas
             }
             
-            # Llamar a la API
+            # Llamar a la API (URL ya incluye el endpoint)
             response = requests.post(
-                f"{self.base_url}/hate-speech",
+                self.base_url,
                 json=payload,
                 headers=headers,
                 timeout=self.timeout
@@ -101,24 +100,38 @@ class VerveAPIDetector:
             Processed detection result
         """
         try:
-            # Mapear respuesta de Verve a nuestro formato
-            # (Esto puede variar según la estructura real de la API)
-            
-            # Asumir que Verve devuelve algo como:
+            # Formato real de API Verve según la imagen:
             # {
-            #     "is_hate_speech": true/false,
-            #     "confidence": 0.85,
-            #     "category": "hate_speech" o "offensive" o "neither"
+            #     "status": "ok",
+            #     "error": null,
+            #     "data": {
+            #         "isProfane": true,
+            #         "filteredText": "Today is so **** hot! Why the **** would anyone go outside?",
+            #         "mask": "*",
+            #         "trimmed": false,
+            #         "profaneWords": 2
+            #     }
             # }
             
-            is_hate_speech = data.get('is_hate_speech', False)
-            confidence = data.get('confidence', 0.0)
-            category = data.get('category', 'neither')
+            if data.get('status') != 'ok':
+                return {
+                    "error": f"API error: {data.get('error', 'Unknown error')}",
+                    "classification": "Neither",
+                    "confidence": 0.0,
+                    "source": "verve"
+                }
             
-            # Mapear categorías
-            if is_hate_speech or category in ['hate_speech', 'hate']:
-                classification = "Hate Speech"
-            elif category in ['offensive', 'profanity', 'inappropriate']:
+            # Extraer datos de la respuesta
+            api_data = data.get('data', {})
+            is_profane = api_data.get('isProfane', False)
+            profane_words_count = api_data.get('profaneWords', 0)
+            filtered_text = api_data.get('filteredText', '')
+            
+            # Calcular confianza basada en el número de palabras ofensivas
+            confidence = min(0.9, 0.5 + (profane_words_count * 0.2)) if is_profane else 0.1
+            
+            # Clasificar basado en el resultado
+            if is_profane and profane_words_count > 0:
                 classification = "Offensive Language"
             else:
                 classification = "Neither"
@@ -127,6 +140,9 @@ class VerveAPIDetector:
                 "classification": classification,
                 "confidence": confidence,
                 "source": "verve",
+                "method": "API Verve",
+                "profane_words_count": profane_words_count,
+                "filtered_text": filtered_text,
                 "raw_response": data
             }
             
@@ -145,7 +161,7 @@ class VerveAPIDetector:
         Returns:
             True if API key is configured
         """
-        return self.api_key is not None and self.api_key != "tu_api_key_de_verve_aqui"
+        return self.api_key is not None and self.api_key != "tu_api_key_de_verve_aqui" and len(self.api_key) > 10
 
 # Instancia global para usar en la app
 verve_detector = VerveAPIDetector()
