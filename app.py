@@ -20,6 +20,8 @@ from sklearn.linear_model import LogisticRegression
 
 # Import API detectors
 from utils.api_verve import verve_detector
+from utils.api_neutrino import neutrino_detector
+from utils.api_ninja import ninja_detector
 
 st.set_page_config(page_title='Hate Speech Detection', layout="wide",
 				   initial_sidebar_state="collapsed")
@@ -72,7 +74,19 @@ def predict_hate_speech(text, model, vectorizer):
             if "error" not in verve_result and verve_result['confidence'] > 0.7:
                 return verve_result['classification'], verve_result['confidence']
         
-        # Nivel 2: Reglas básicas (fallback)
+        # Nivel 2: Neutrino API (si está disponible)
+        if neutrino_detector.is_available():
+            neutrino_result = neutrino_detector.detect_profanity(text)
+            if "error" not in neutrino_result and neutrino_result['confidence'] > 0.6:
+                return neutrino_result['classification'], neutrino_result['confidence']
+        
+        # Nivel 3: API Ninja (si está disponible)
+        if ninja_detector.is_available():
+            ninja_result = ninja_detector.detect_profanity(text)
+            if "error" not in ninja_result and ninja_result['confidence'] > 0.6:
+                return ninja_result['classification'], ninja_result['confidence']
+        
+        # Nivel 4: Reglas básicas (fallback)
         offensive_words = {
             'hate_speech': [
                 # English hate speech
@@ -142,7 +156,7 @@ def predict_hate_speech(text, model, vectorizer):
             class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
             return class_names[rule_pred], rule_conf
         else:
-            # Nivel 3: ML model (fallback final)
+            # Nivel 5: ML model (fallback final)
             X = vectorizer.transform([text])
             prediction = model.predict(X)[0]
             probability = model.predict_proba(X)[0]
