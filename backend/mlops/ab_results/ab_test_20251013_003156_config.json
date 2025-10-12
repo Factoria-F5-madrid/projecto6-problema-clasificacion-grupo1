@@ -1,0 +1,18 @@
+{
+  "test_id": "ab_test_20251013_003156",
+  "model_a": {
+    "name": "UltimateHybrid",
+    "type": "UltimateHybridSystem",
+    "traffic_percentage": 0.5
+  },
+  "model_b": {
+    "name": "FinalSmartSelector",
+    "type": "FinalSmartSelector",
+    "traffic_percentage": 0.5
+  },
+  "start_time": "2025-10-13T00:31:56.958755",
+  "end_time": "2025-10-14T00:31:56.958763",
+  "status": "running",
+  "min_samples": 100,
+  "confidence_level": 0.95
+}
