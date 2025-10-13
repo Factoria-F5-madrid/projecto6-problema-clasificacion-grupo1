@@ -10,18 +10,24 @@ import subprocess
 def main():
     """Inicia la aplicación Streamlit optimizada para Render."""
     
-    # Obtener puerto de Render
-    port = os.environ.get("PORT", "8501")
+    # Obtener puerto de Render (obligatorio)
+    port = os.environ.get("PORT")
+    if not port:
+        print("❌ Error: Variable PORT no encontrada. Render debe proporcionar esta variable.")
+        sys.exit(1)
     
     print(f"🚀 Iniciando Hate Speech Detector en puerto {port}")
+    print(f"🌐 URL: https://hate-speech-detector.onrender.com")
     
     # Comando de Streamlit optimizado para Render
     cmd = [
         "streamlit", "run", "frontend/apps/app_organized.py",
-        "--server.port", port,
+        "--server.port", str(port),
         "--server.address", "0.0.0.0",
         "--server.headless", "true",
-        "--browser.gatherUsageStats", "false"
+        "--browser.gatherUsageStats", "false",
+        "--server.enableCORS", "false",
+        "--server.enableXsrfProtection", "false"
     ]
     
     print(f"📋 Comando: {' '.join(cmd)}")
