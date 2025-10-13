@@ -372,4 +372,9 @@ docker run -p 8501:8501 hate-speech-detector
 
 Este proyecto representa una **solución completa y robusta** para la detección de hate speech, combinando las mejores prácticas de Machine Learning, MLOps y desarrollo de software. Con una **precisión del 93.8%** y capacidades avanzadas de detección de evasiones, el sistema está listo para producción y cumple todos los requisitos del nivel experto.
 
-**¡El proyecto está listo para entrega!** 🚀
+## :floppy_disk: Entregables
+
+- Presentación: https://gamma.app/docs/Limpieza-de-Contenido-con-Inteligencia-Artificial-vy7r9u8agkklzyv
+- Informe ejecutivo: https://gamma.app/docs/Informe-Tecnico-Sistema-Avanzado-de-Clasificacion-de-Hate-Speech-n9qxc3whglqsiar
+- Actas de reunion: https://www.canva.com/design/DAG1qO-6suQ/HUNY_aL27rKFx5x_bUM31w/edit?utm_content=DAG1qO-6suQ&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+- Github Projects: https://github.com/orgs/Factoria-F5-madrid/projects/45
