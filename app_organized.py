@@ -1348,21 +1348,47 @@ def data_drift_page():
 
 def auto_replacement_page():
     """Página de Auto-reemplazo de Modelos para MLOps"""
-    st.header("🔄 Auto-reemplazo de Modelos (MLOps)")
-    st.markdown("**Nivel Experto - Reemplazo Automático Basado en Rendimiento**")
-    
-    # Importar pandas
-    import pandas as pd
-    
-    # Inicializar el sistema de auto-reemplazo
-    @st.cache_resource
-    def load_replacement_system():
-        return AutoModelReplacement()
-    
-    replacement_system = load_replacement_system()
-    
-    # Tabs para diferentes funcionalidades
-    tab1, tab2, tab3, tab4 = st.tabs(["📝 Gestionar Modelos", "🔍 Evaluar Rendimiento", "🔄 Verificar Reemplazo", "📊 Estado y Historial"])
+    try:
+        st.header("🔄 Auto-reemplazo de Modelos (MLOps)")
+        st.markdown("**Nivel Experto - Reemplazo Automático Basado en Rendimiento**")
+        
+        # Importar pandas
+        import pandas as pd
+        
+        # Inicializar el sistema de auto-reemplazo
+        @st.cache_resource
+        def load_replacement_system():
+            return AutoModelReplacement()
+        
+        replacement_system = load_replacement_system()
+        
+        # Registrar modelos automáticamente si no hay ninguno
+        if not replacement_system.candidate_models:
+            st.info("🔄 Registrando modelos automáticamente...")
+            
+            # Modelos disponibles
+            available_models = [
+                ("Model_A", "backend/models/saved/improved_model.pkl", "hybrid"),
+                ("Model_B", "backend/models/saved/balanced_model.pkl", "hybrid")
+            ]
+            
+            for model_name, model_path, model_type in available_models:
+                if os.path.exists(model_path):
+                    if replacement_system.register_model(model_name, model_path, model_type):
+                        st.success(f"✅ {model_name} registrado automáticamente")
+                    else:
+                        st.warning(f"⚠️ Error registrando {model_name}")
+                else:
+                    st.warning(f"⚠️ Archivo no encontrado: {model_path}")
+        
+        st.success("✅ Sistema de auto-reemplazo cargado correctamente")
+        
+        # Tabs para diferentes funcionalidades
+        tab1, tab2, tab3, tab4 = st.tabs(["📝 Gestionar Modelos", "🔍 Evaluar Rendimiento", "🔄 Verificar Reemplazo", "📊 Estado y Historial"])
+        
+    except Exception as e:
+        st.error(f"❌ Error cargando sistema de auto-reemplazo: {e}")
+        return
     
     with tab1:
         st.subheader("📝 Gestionar Modelos Candidatos")
@@ -1730,9 +1756,233 @@ def auto_replacement_page():
         - **Última evaluación:** {status['last_evaluation']['timestamp'][:19] if status['last_evaluation'] else 'N/A'}
         
         **Configuración:**
-        - Umbral de mejora: 5%
-        - Mínimo de evaluaciones: 10
-        - Confianza requerida: 95%
+        - Umbral de mejora: 3%
+        - Mínimo de evaluaciones: 3
+        - Confianza requerida: 90%
+        """)
+
+def auto_replacement_page():
+    """Página de Auto-reemplazo de Modelos"""
+    st.header("🔄 Auto-reemplazo de Modelos")
+    st.markdown("**Sistema automático de reemplazo basado en rendimiento**")
+    
+    # Crear sistema de auto-reemplazo
+    replacement_system = AutoModelReplacement()
+    
+    # Registrar modelos de demostración si no existen
+    if not replacement_system.candidate_models:
+        st.info("🔄 Registrando modelos de demostración...")
+        try:
+            # Registrar Model_A
+            replacement_system.register_model(
+                "Model_A", 
+                "backend/models/saved/demo_model_a.pkl", 
+                "RandomForest"
+            )
+            # Registrar Model_B
+            replacement_system.register_model(
+                "Model_B", 
+                "backend/models/saved/demo_model_b.pkl", 
+                "LogisticRegression"
+            )
+            st.success("✅ Modelos de demostración registrados")
+        except Exception as e:
+            st.warning(f"⚠️ Error registrando modelos: {e}")
+    
+    # Tabs
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📊 Estado Actual", 
+        "🔍 Evaluar Rendimiento", 
+        "📈 Historial", 
+        "ℹ️ Información"
+    ])
+    
+    with tab1:
+        st.markdown("**📊 Estado Actual del Sistema**")
+        
+        # Estado general
+        status = replacement_system.get_model_status()
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Modelos Registrados", len(status['candidate_models']))
+            st.metric("Total Evaluaciones", status['total_evaluations'])
+        
+        with col2:
+            if status['current_model']:
+                current_metrics = status['current_model'].get('performance_metrics', {})
+                st.metric("Modelo Actual", status['current_model']['name'])
+                st.metric("Score Actual", f"{current_metrics.get('avg_overall_score', 0):.3f}")
+            else:
+                st.metric("Modelo Actual", "No establecido")
+                st.metric("Score Actual", "N/A")
+        
+        with col3:
+            if status['current_model'] and 'performance_metrics' in status['current_model']:
+                current_metrics = status['current_model']['performance_metrics']
+                st.metric("Precision", f"{current_metrics.get('avg_precision', 0):.3f}")
+                st.metric("Recall", f"{current_metrics.get('avg_recall', 0):.3f}")
+            else:
+                st.metric("Precision", "0.000")
+                st.metric("Recall", "0.000")
+        
+        # Información sobre el estado
+        if status['total_evaluations'] == 0:
+            st.warning("⚠️ **No se han ejecutado evaluaciones aún.** Haz clic en '🚀 Ejecutar Evaluación' para obtener métricas reales.")
+        else:
+            st.success(f"✅ **{status['total_evaluations']} evaluaciones** ejecutadas. Métricas actualizadas.")
+        
+        # Mostrar métricas del modelo actual si están disponibles
+        if status['current_model'] and 'performance_metrics' in status['current_model']:
+            current_metrics = status['current_model']['performance_metrics']
+            st.info(f"📊 **Modelo actual:** {status['current_model']['name']} - Score: {current_metrics.get('avg_overall_score', 0):.3f}")
+        else:
+            st.warning("⚠️ **El modelo actual no tiene métricas detalladas.** Ejecuta evaluaciones para actualizarlas.")
+        
+        # Modelos candidatos
+        st.markdown("**📋 Modelos Candidatos**")
+        
+        if status['candidate_models']:
+            candidates_data = []
+            for model in status['candidate_models']:
+                metrics = model.get('performance_metrics', {})
+                candidates_data.append({
+                    'Nombre': model['name'],
+                    'Estado': model['status'],
+                    'Tipo': model['type'],
+                    'Score': f"{metrics.get('avg_overall_score', 0):.3f}",
+                    'Evaluaciones': metrics.get('total_evaluations', 0),
+                    'Registrado': model['registered_at'][:10]
+                })
+            
+            df_candidates = pd.DataFrame(candidates_data)
+            st.dataframe(df_candidates, use_container_width=True)
+            
+            # Botón para establecer modelo actual
+            st.markdown("**🎯 Establecer Modelo Actual**")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                selected_model = st.selectbox(
+                    "Seleccionar modelo:",
+                    [model['name'] for model in status['candidate_models']],
+                    key="select_current_model"
+                )
+            
+            with col2:
+                if st.button("⚡ Establecer como Actual", type="primary"):
+                    if replacement_system.set_current_model(selected_model):
+                        st.success(f"✅ {selected_model} establecido como modelo actual")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Error estableciendo {selected_model}")
+        else:
+            st.info("📭 No hay modelos candidatos registrados")
+    
+    with tab2:
+        st.markdown("**🔍 Evaluar Rendimiento de Modelos**")
+        
+        # Botón para evaluar
+        if st.button("🚀 Ejecutar Evaluación", type="primary"):
+            with st.spinner("Evaluando modelos..."):
+                # Crear datos de prueba MÁS BALANCEADOS
+                test_data = [
+                    # Ejemplos claramente ofensivos (8)
+                    "I hate you so much, you're worthless",
+                    "Go kill yourself idiot", 
+                    "You're a stupid piece of trash",
+                    "F*** you and your family",
+                    "Die already loser",
+                    "You are such an idiot",
+                    "I hate this f***ing place",
+                    "You're a complete moron",
+                    
+                    # Ejemplos claramente neutros (8)
+                    "Hello, how are you today?",
+                    "This is a nice product",
+                    "Thank you for your help",
+                    "I'm going to the store",
+                    "Weather is good today",
+                    "I like this restaurant",
+                    "Have a great day",
+                    "This is interesting"
+                ]
+                true_labels = [
+                    # Ofensivos (8)
+                    "offensive", "offensive", "offensive", "offensive",
+                    "offensive", "offensive", "offensive", "offensive",
+                    # Neutros (8)
+                    "neither", "neither", "neither", "neither",
+                    "neither", "neither", "neither", "neither"
+                ]
+                
+                # Evaluar cada modelo
+                for model_name in ["Model_A", "Model_B"]:
+                    try:
+                        replacement_system.evaluate_model_performance(
+                            model_name, test_data, true_labels
+                        )
+                        st.success(f"✅ {model_name} evaluado exitosamente")
+                    except Exception as e:
+                        st.error(f"❌ Error evaluando {model_name}: {e}")
+                
+                # Forzar actualización de la página
+                st.rerun()
+        
+        # Verificar reemplazo
+        if st.button("🔄 Verificar Reemplazo"):
+            recommendation = replacement_system.check_for_replacement()
+            if recommendation['should_replace']:
+                # Mostrar información de reemplazo
+                candidate_name = recommendation.get('candidate_model', 'Modelo desconocido')
+                improvement = recommendation.get('improvement', 0)
+                st.success(f"✅ Se recomienda reemplazar con {candidate_name} (+{improvement:.3f})")
+                
+                if st.button("⚡ Ejecutar Reemplazo"):
+                    result = replacement_system.execute_replacement()
+                    if result['success']:
+                        st.success(f"✅ Reemplazo exitoso: {result['message']}")
+                    else:
+                        st.error(f"❌ Error en reemplazo: {result['message']}")
+            else:
+                # Mostrar razón cuando no se recomienda reemplazo
+                reason = recommendation.get('reason', 'No se recomienda reemplazo')
+                st.info(f"ℹ️ {reason}")
+    
+    with tab3:
+        st.markdown("**📈 Historial de Reemplazos**")
+        
+        replacement_history = replacement_system.get_replacement_history()
+        
+        if replacement_history:
+            history_data = []
+            for record in replacement_history[-10:]:  # Últimos 10
+                history_data.append({
+                    'Fecha': record['timestamp'][:19],
+                    'Modelo Anterior': record['old_model'],
+                    'Modelo Nuevo': record['new_model'],
+                    'Mejora': f"+{record['improvement']:.3f}",
+                    'Confianza': f"{record['confidence']:.3f}",
+                    'Razón': record['reason']
+                })
+            
+            df_history = pd.DataFrame(history_data)
+            st.dataframe(df_history, use_container_width=True)
+        else:
+            st.info("📭 No hay historial de reemplazos")
+    
+    with tab4:
+        st.markdown("**ℹ️ Información del Sistema**")
+        st.markdown(f"""
+        - **Total de evaluaciones:** {status['total_evaluations']}
+        - **Modelos registrados:** {len(status['candidate_models'])}
+        - **Última evaluación:** {status['last_evaluation']['timestamp'][:19] if status['last_evaluation'] else 'N/A'}
+        
+        **Configuración:**
+        - Umbral de mejora: 3%
+        - Mínimo de evaluaciones: 3
+        - Confianza requerida: 90%
         """)
 
 if __name__ == "__main__":

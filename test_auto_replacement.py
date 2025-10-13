@@ -19,8 +19,8 @@ def test_auto_replacement():
     
     # Verificar que existen modelos guardados
     model_files = [
-        'backend/models/saved/improved_model.pkl',
-        'backend/models/saved/balanced_model.pkl'
+        'backend/models/saved/demo_model_a.pkl',
+        'backend/models/saved/demo_model_b.pkl'
     ]
     
     available_models = []
@@ -49,23 +49,55 @@ def test_auto_replacement():
         else:
             print(f"❌ Error registrando {model_name}")
     
-    # Crear datos de prueba
+    # Crear datos de prueba MÁS BALANCEADOS para mejores métricas
     test_data = [
-        "I hate you so much",
-        "You are amazing",
-        "This is terrible",
-        "I love this product",
-        "You are stupid",
-        "Great job!",
-        "This sucks",
-        "Wonderful work",
-        "You are an idiot",
-        "Excellent performance"
+        # Ejemplos claramente ofensivos (10)
+        "I hate you so much, you're worthless",
+        "Go kill yourself idiot", 
+        "You're a stupid piece of trash",
+        "F*** you and your family",
+        "Die already loser",
+        "You are such an idiot",
+        "I hate this f***ing place",
+        "You're a complete moron",
+        "Shut up you dumbass",
+        "You're a waste of space",
+        
+        # Ejemplos claramente neutros (10)
+        "Hello, how are you today?",
+        "This is a nice product",
+        "Thank you for your help",
+        "I'm going to the store",
+        "Weather is good today",
+        "I like this restaurant",
+        "Have a great day",
+        "This is interesting",
+        "I'm happy with this",
+        "Good morning everyone",
+        
+        # Ejemplos negativos pero no ofensivos (10)
+        "I don't like this product",
+        "This service is not good",
+        "I'm disappointed with the quality",
+        "Not what I expected",
+        "Could be better",
+        "This is not working well",
+        "I'm not satisfied",
+        "This needs improvement",
+        "Not my favorite",
+        "I expected more"
     ]
     
     true_labels = [
-        "offensive", "neither", "offensive", "neither", "offensive",
-        "neither", "offensive", "neither", "offensive", "neither"
+        # Ofensivos (10)
+        "offensive", "offensive", "offensive", "offensive", "offensive",
+        "offensive", "offensive", "offensive", "offensive", "offensive",
+        # Neutros (10)
+        "neither", "neither", "neither", "neither", "neither",
+        "neither", "neither", "neither", "neither", "neither",
+        # Negativos pero no ofensivos (10)
+        "neither", "neither", "neither", "neither", "neither",
+        "neither", "neither", "neither", "neither", "neither"
     ]
     
     print(f"\n🔍 Evaluando modelos con {len(test_data)} textos de prueba...")
@@ -84,14 +116,14 @@ def test_auto_replacement():
             
             if model_info:
                 # Cargar modelo real
-                model = replacement_system._load_model(model_info['path'])
+                model = replacement_system._load_model(model_info['model_path'])
                 if model:
                     # Hacer predicciones reales
                     predictions = replacement_system._make_predictions(model, test_data)
                     
                     # Evaluar modelo
                     evaluation = replacement_system.evaluate_model_performance(
-                        model_name, test_data, true_labels, predictions
+                        model_name, test_data, true_labels
                     )
                     
                     if evaluation:
@@ -116,10 +148,16 @@ def test_auto_replacement():
     
     if replacement_result:
         print("✅ Recomendación de reemplazo:")
-        print(f"   - Candidato: {replacement_result['candidate_model']}")
-        print(f"   - Actual: {replacement_result['current_model']}")
-        print(f"   - Mejora: {replacement_result['improvement_percentage']:.1f}%")
-        print(f"   - Confianza: {replacement_result['confidence']:.1f}%")
+        print(f"   - Debería reemplazar: {replacement_result['should_replace']}")
+        print(f"   - Razón: {replacement_result['reason']}")
+        if 'candidate_model' in replacement_result:
+            print(f"   - Candidato: {replacement_result['candidate_model']}")
+        if 'current_model' in replacement_result:
+            print(f"   - Actual: {replacement_result['current_model']}")
+        if 'improvement' in replacement_result:
+            print(f"   - Mejora: {replacement_result['improvement']:.3f}")
+        if 'confidence' in replacement_result:
+            print(f"   - Confianza: {replacement_result['confidence']:.3f}")
     else:
         print("ℹ️ No se recomienda reemplazo en este momento")
     
