@@ -1,19 +1,19 @@
 [
   {
     "name": "Model_A",
-    "path": "backend/models/saved/balanced_model.pkl",
+    "path": "backend/models/saved/improved_model.pkl",
     "type": "hybrid",
-    "registered_at": "2025-10-13T01:02:06.425359",
+    "registered_at": "2025-10-13T10:05:50.816850",
     "status": "candidate",
     "evaluations": [],
     "performance_metrics": {}
   },
   {
     "name": "Model_B",
-    "path": "backend/models/saved/improved_model.pkl",
+    "path": "backend/models/saved/balanced_model.pkl",
     "type": "hybrid",
-    "registered_at": "2025-10-13T01:02:06.425879",
-    "status": "production",
+    "registered_at": "2025-10-13T10:05:50.817418",
+    "status": "candidate",
     "evaluations": [],
     "performance_metrics": {}
   }

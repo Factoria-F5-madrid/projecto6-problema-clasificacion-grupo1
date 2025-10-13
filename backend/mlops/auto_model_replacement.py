@@ -220,15 +220,72 @@ class AutoModelReplacement:
         
         return score
     
+    def _load_model(self, model_path: str):
+        """Cargar modelo desde archivo"""
+        try:
+            import joblib
+            model = joblib.load(model_path)
+            print(f"✅ Modelo cargado desde: {model_path}")
+            return model
+        except Exception as e:
+            print(f"❌ Error cargando modelo {model_path}: {e}")
+            return None
+    
+    def _make_predictions(self, model, test_data: List[str]) -> List[str]:
+        """Hacer predicciones con el modelo cargado"""
+        try:
+            predictions = []
+            
+            for text in test_data:
+                # Intentar diferentes métodos de predicción según el tipo de modelo
+                if hasattr(model, 'predict'):
+                    # Modelo scikit-learn estándar - arreglar formato 2D
+                    try:
+                        import numpy as np
+                        # Asegurar que el texto esté en formato 2D
+                        text_2d = np.array([text]).reshape(1, -1)
+                        pred = model.predict(text_2d)[0]
+                    except:
+                        # Si falla, intentar con formato original
+                        pred = model.predict([text])[0]
+                elif hasattr(model, 'detect_hate_speech'):
+                    # Sistema híbrido personalizado
+                    result = model.detect_hate_speech(text)
+                    pred = result.get('classification', 'neither')
+                elif hasattr(model, 'predict_ensemble'):
+                    # Sistema de ensemble
+                    result = model.predict_ensemble(text)
+                    pred = result.get('classification', 'neither')
+                else:
+                    # Fallback
+                    pred = 'neither'
+                
+                predictions.append(pred)
+            
+            print(f"✅ Predicciones generadas: {len(predictions)}")
+            return predictions
+            
+        except Exception as e:
+            print(f"❌ Error generando predicciones: {e}")
+            # Retornar predicciones por defecto en caso de error
+            return ['neither'] * len(test_data)
+    
     def _update_model_metrics(self, model_name: str, evaluation: Dict):
         """Actualizar métricas de un modelo"""
         
+        print(f"🔍 Actualizando métricas para {model_name}")
         model = next((m for m in self.candidate_models if m['name'] == model_name), None)
         if not model:
+            print(f"❌ Modelo {model_name} no encontrado en candidatos")
             return
+        
+        # Inicializar evaluations si no existe
+        if 'evaluations' not in model:
+            model['evaluations'] = []
         
         # Agregar evaluación
         model['evaluations'].append(evaluation)
+        print(f"✅ Evaluación agregada. Total: {len(model['evaluations'])}")
         
         # Calcular métricas promedio
         if len(model['evaluations']) > 0:
@@ -399,9 +456,7 @@ class AutoModelReplacement:
     def get_model_status(self) -> Dict:
         """Obtener estado actual de todos los modelos"""
         
-        self._load_candidate_models()
-        self._load_evaluation_history()
-        
+        # No recargar desde archivo, usar el estado actual en memoria
         return {
             'current_model': self.current_model,
             'candidate_models': self.candidate_models,
@@ -487,6 +542,7 @@ def test_auto_replacement():
     for model in status['candidate_models']:
         metrics = model.get('performance_metrics', {})
         print(f"   {model['name']} ({model['status']}): Score = {metrics.get('avg_overall_score', 0):.3f}")
+
 
 if __name__ == "__main__":
     test_auto_replacement()

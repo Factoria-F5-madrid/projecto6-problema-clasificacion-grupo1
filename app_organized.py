@@ -1575,13 +1575,36 @@ def auto_replacement_page():
                 if st.button("🚀 Iniciar Evaluación") and selected_models:
                     with st.spinner("Evaluando modelos..."):
                         for model_name in selected_models:
-                            # Simular predicciones (en un caso real, cargarías el modelo)
-                            predictions = ["offensive", "neither", "offensive", "neither"] * 15
-                            
-                            # Evaluar modelo
-                            evaluation = replacement_system.evaluate_model_performance(
-                                model_name, test_data, true_labels, predictions
-                            )
+                            # Cargar modelo real y hacer predicciones reales
+                            try:
+                                # Buscar el modelo en la lista de candidatos
+                                model_info = None
+                                for candidate in replacement_system.candidate_models:
+                                    if candidate['name'] == model_name:
+                                        model_info = candidate
+                                        break
+                                
+                                if model_info:
+                                    # Cargar modelo real
+                                    model = replacement_system._load_model(model_info['path'])
+                                    if model:
+                                        # Hacer predicciones reales
+                                        predictions = replacement_system._make_predictions(model, test_data)
+                                        
+                                        # Evaluar modelo
+                                        evaluation = replacement_system.evaluate_model_performance(
+                                            model_name, test_data, true_labels, predictions
+                                        )
+                                    else:
+                                        st.error(f"❌ No se pudo cargar el modelo {model_name}")
+                                        continue
+                                else:
+                                    st.error(f"❌ Modelo {model_name} no encontrado en candidatos")
+                                    continue
+                                    
+                            except Exception as e:
+                                st.error(f"❌ Error evaluando {model_name}: {e}")
+                                continue
                             
                             if evaluation:
                                 st.success(f"✅ {model_name}: Score = {evaluation['overall_score']:.3f}")
