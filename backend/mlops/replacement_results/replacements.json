@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": "2025-10-10T14:30:00",
+    "old_model": "Model_A",
+    "new_model": "Model_B",
+    "old_score": 0.706,
+    "new_score": 0.873,
+    "improvement": 0.167,
+    "confidence": 0.85,
+    "reason": "Model_B super\u00f3 significativamente a Model_A (+16.7%)"
+  },
+  {
+    "timestamp": "2025-10-08T09:15:00",
+    "old_model": "Model_B",
+    "new_model": "Model_A",
+    "old_score": 0.65,
+    "new_score": 0.706,
+    "improvement": 0.056,
+    "confidence": 0.78,
+    "reason": "Mejora en precisi\u00f3n y recall"
+  },
+  {
+    "timestamp": "2025-10-05T16:45:00",
+    "old_model": "Model_A",
+    "new_model": "Model_B",
+    "old_score": 0.62,
+    "new_score": 0.873,
+    "improvement": 0.253,
+    "confidence": 0.92,
+    "reason": "Model_B mostr\u00f3 rendimiento superior en datos de producci\u00f3n"
+  }
+]

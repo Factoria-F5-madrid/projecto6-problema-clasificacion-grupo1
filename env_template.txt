@@ -1,0 +1,65 @@
+# ===========================================
+# CONFIGURACIÓN DE APIS EXTERNAS
+# ===========================================
+# Copia este archivo como .env y rellena con tus API keys
+
+# Google Perspective API
+# Obtén tu API key en: https://developers.perspectiveapi.com/
+GOOGLE_PERSPECTIVE_API_KEY=tu_google_perspective_api_key_aqui
+
+# API Verve - Profanity Filter
+# Obtén tu API key en: https://verveapi.com/
+API_VERVE_KEY=tu_api_verve_key_aqui
+
+# Neutrino API
+# Obtén tu API key en: https://www.neutrinoapi.com/
+NEUTRINO_API_KEY=tu_neutrino_api_key_aqui
+
+# API Ninja
+# Obtén tu API key en: https://api-ninjas.com/
+API_NINJA_KEY=tu_api_ninja_key_aqui
+
+# ===========================================
+# CONFIGURACIÓN DEL SISTEMA
+# ===========================================
+
+# Puerto para la aplicación Streamlit (opcional)
+STREAMLIT_PORT=8501
+
+# Modo de debug (true/false)
+DEBUG_MODE=false
+
+# Nivel de logging (DEBUG, INFO, WARNING, ERROR)
+LOG_LEVEL=INFO
+
+# ===========================================
+# CONFIGURACIÓN DE MODELOS
+# ===========================================
+
+# Umbral de confianza para clasificación (0.0 - 1.0)
+CONFIDENCE_THRESHOLD=0.5
+
+# Número máximo de evaluaciones para auto-reemplazo
+MAX_EVALUATIONS=10
+
+# Umbral de mejora para reemplazo de modelos (0.0 - 1.0)
+IMPROVEMENT_THRESHOLD=0.03
+
+# ===========================================
+# CONFIGURACIÓN DE DATOS
+# ===========================================
+
+# Ruta al dataset de entrenamiento
+TRAINING_DATA_PATH=data/processed/cleaned_tweets.csv
+
+# Ruta al dataset de prueba
+TEST_DATA_PATH=data/processed/expanded_tweets.csv
+
+# ===========================================
+# NOTAS IMPORTANTES
+# ===========================================
+# 1. Las API keys son opcionales - el sistema funciona sin ellas
+# 2. Sin API keys, solo se usan modelos ML y reglas locales
+# 3. Con API keys, se obtiene mayor precisión y robustez
+# 4. No compartas este archivo .env en el repositorio
+# 5. Para producción, configura las variables en Render
