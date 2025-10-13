@@ -1,0 +1,21 @@
+{
+  "window_name": "test_similar",
+  "timestamp": "2025-10-13T09:50:40.007207",
+  "new_samples": 10,
+  "reference_samples": 100,
+  "drift_detected": true,
+  "drift_severity": "moderate",
+  "drift_score": 0.3803626436964118,
+  "metrics": {
+    "kl_divergence": 1.0,
+    "length_drift": 0.09458655562165377,
+    "word_count_drift": 0.07964601769911492,
+    "sparsity_drift": 0.0017741935483870375,
+    "ks_statistic": 0.7258064516129032,
+    "ks_pvalue": 4.540247437936642e-16
+  },
+  "alerts": [
+    "KL Divergence cr\u00edtica: 1.000",
+    "Distribuci\u00f3n significativamente diferente (KS p-value: 0.000)"
+  ]
+}

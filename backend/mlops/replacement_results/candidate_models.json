@@ -4,7 +4,7 @@
     "path": "backend/models/saved/balanced_model.pkl",
     "type": "hybrid",
     "registered_at": "2025-10-13T01:02:06.425359",
-    "status": "production",
+    "status": "candidate",
     "evaluations": [],
     "performance_metrics": {}
   },
@@ -13,7 +13,7 @@
     "path": "backend/models/saved/improved_model.pkl",
     "type": "hybrid",
     "registered_at": "2025-10-13T01:02:06.425879",
-    "status": "candidate",
+    "status": "production",
     "evaluations": [],
     "performance_metrics": {}
   }

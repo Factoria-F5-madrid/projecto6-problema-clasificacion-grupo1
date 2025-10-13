@@ -1,13 +1,13 @@
 {
   "window_name": "live_analysis",
-  "timestamp": "2025-10-13T09:30:58.946689",
+  "timestamp": "2025-10-13T09:53:19.951734",
   "new_samples": 1,
   "reference_samples": 24759,
   "drift_detected": true,
   "drift_severity": "critical",
-  "drift_score": 3778.422150683719,
+  "drift_score": 0.7494306065167108,
   "metrics": {
-    "kl_divergence": 18889.36360038601,
+    "kl_divergence": 1.0,
     "length_drift": 0.8979803328134626,
     "word_count_drift": 0.8449820620222018,
     "sparsity_drift": 0.004190637747889636,
@@ -15,7 +15,7 @@
     "ks_pvalue": 0.0
   },
   "alerts": [
-    "KL Divergence cr\u00edtica: 18889.364",
+    "KL Divergence cr\u00edtica: 1.000",
     "Drift en longitud de texto: 0.898",
     "Drift en conteo de palabras: 0.845",
     "Distribuci\u00f3n significativamente diferente (KS p-value: 0.000)"

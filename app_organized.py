@@ -948,139 +948,290 @@ def data_drift_page():
         st.subheader("🔧 Configurar Datos de Referencia")
         st.markdown("**Establece el dataset de entrenamiento como referencia para detectar cambios**")
         
-        # Cargar datos de referencia
-        if st.button("🔄 Cargar Dataset de Entrenamiento como Referencia"):
-            try:
-                # Cargar datos del CSV
-                df = pd.read_csv('backend/data/processed/cleaned_tweets.csv')
-                
-                # Obtener textos
-                texts = df['clean_tweet_improved'].dropna().tolist()
-                
-                # Configurar referencia
-                drift_monitor.set_reference_data(texts)
-                
-                st.success(f"✅ Datos de referencia configurados: {len(texts)} textos")
-                
-            except Exception as e:
-                st.error(f"❌ Error cargando datos: {e}")
+        # Explicación clara
+        st.info("""
+        **📋 ¿Qué son los datos de referencia?**
+        
+        Los datos de referencia son el **dataset original de entrenamiento** que se usó para entrenar el modelo. 
+        Estos datos sirven como **punto de comparación** para detectar si los nuevos datos de producción 
+        han cambiado significativamente.
+        
+        **⚠️ Importante:** Solo usa datos de entrenamiento, NO datos de producción.
+        """)
+        
+        # Opciones para cargar referencia
+        st.markdown("**📥 Opciones para cargar datos de referencia:**")
+        
+        option = st.radio(
+            "Selecciona la fuente de datos:",
+            ["📁 Archivo CSV de entrenamiento", "🗄️ Base de datos", "📊 Dataset predefinido"],
+            horizontal=True
+        )
+        
+        if option == "📁 Archivo CSV de entrenamiento":
+            st.markdown("**Sube el archivo CSV con los datos de entrenamiento:**")
+            uploaded_file = st.file_uploader(
+                "Selecciona archivo CSV",
+                type=['csv'],
+                help="Debe contener la columna con los textos de entrenamiento"
+            )
+            
+            if uploaded_file is not None:
+                try:
+                    df = pd.read_csv(uploaded_file)
+                    
+                    # Mostrar columnas disponibles
+                    text_column = st.selectbox(
+                        "Selecciona la columna con los textos:",
+                        df.columns.tolist(),
+                        help="Columna que contiene los textos de entrenamiento"
+                    )
+                    
+                    if st.button("🔄 Configurar Referencia desde CSV"):
+                        texts = df[text_column].dropna().tolist()
+                        drift_monitor.set_reference_data(texts)
+                        st.success(f"✅ Datos de referencia configurados: {len(texts)} textos")
+                        
+                except Exception as e:
+                    st.error(f"❌ Error cargando CSV: {e}")
+        
+        elif option == "🗄️ Base de datos":
+            st.markdown("**Conectar a base de datos para obtener datos de entrenamiento:**")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                db_type = st.selectbox("Tipo de base de datos:", ["PostgreSQL", "MySQL", "SQLite", "MongoDB"])
+                host = st.text_input("Host:", value="localhost")
+                port = st.number_input("Puerto:", value=5432 if db_type == "PostgreSQL" else 3306)
+            
+            with col2:
+                database = st.text_input("Nombre de la base de datos:", value="hate_speech_db")
+                username = st.text_input("Usuario:")
+                password = st.text_input("Contraseña:", type="password")
+            
+            query = st.text_area(
+                "Consulta SQL:",
+                value="SELECT text_column FROM training_data WHERE split = 'train'",
+                help="Consulta para obtener los textos de entrenamiento"
+            )
+            
+            if st.button("🔗 Conectar y Configurar Referencia"):
+                try:
+                    # Simular conexión a base de datos
+                    st.info("🔄 Conectando a la base de datos...")
+                    
+                    # En un caso real, aquí se haría la conexión real
+                    # Por ahora, usamos datos simulados
+                    st.warning("⚠️ Funcionalidad de base de datos en desarrollo. Usando datos de ejemplo.")
+                    
+                    # Cargar datos de ejemplo
+                    df = pd.read_csv('backend/data/processed/cleaned_tweets.csv')
+                    texts = df['clean_tweet_improved'].dropna().tolist()
+                    drift_monitor.set_reference_data(texts)
+                    
+                    st.success(f"✅ Datos de referencia configurados: {len(texts)} textos")
+                    
+                except Exception as e:
+                    st.error(f"❌ Error conectando a la base de datos: {e}")
+        
+        else:  # Dataset predefinido
+            st.markdown("**Usar el dataset de entrenamiento predefinido:**")
+            
+            if st.button("🔄 Cargar Dataset de Entrenamiento Predefinido"):
+                try:
+                    # Cargar datos del CSV predefinido
+                    df = pd.read_csv('backend/data/processed/cleaned_tweets.csv')
+                    
+                    # Obtener textos
+                    texts = df['clean_tweet_improved'].dropna().tolist()
+                    
+                    # Configurar referencia
+                    drift_monitor.set_reference_data(texts)
+                    
+                    st.success(f"✅ Datos de referencia configurados: {len(texts)} textos")
+                    
+                except Exception as e:
+                    st.error(f"❌ Error cargando datos: {e}")
         
         # Mostrar estado actual
+        st.markdown("---")
         if drift_monitor.load_reference_data():
-            st.info("✅ Datos de referencia ya configurados")
+            st.success("✅ Datos de referencia ya configurados")
         else:
             st.warning("⚠️ No hay datos de referencia configurados")
     
     with tab2:
         st.subheader("📊 Monitorear Drift en Tiempo Real")
-        st.markdown("**Analiza nuevos datos para detectar cambios respecto al dataset de entrenamiento**")
+        st.markdown("**Analiza nuevos datos de PRODUCCIÓN para detectar cambios respecto al dataset de entrenamiento**")
         
-        # Input de texto para análisis
-        st.markdown("**🔍 Analizar Textos Nuevos**")
+        # Explicación clara
+        st.warning("""
+        **⚠️ IMPORTANTE - Datos de Producción:**
         
-        # Opción 1: Texto individual
-        text_input = st.text_area(
-            "Ingresa texto para analizar:",
-            placeholder="Escribe aquí el texto que quieres analizar...",
-            height=100
+        Esta sección es para analizar **datos de producción** (nuevos datos que llegan en tiempo real).
+        NO uses datos de entrenamiento aquí, ya que eso causaría falsos positivos.
+        
+        **✅ Usa:** Datos nuevos de usuarios, comentarios recientes, textos de producción
+        **❌ NO uses:** Datos de entrenamiento, datasets de prueba, datos históricos
+        """)
+        
+        # Verificar que hay referencia configurada
+        if not drift_monitor.load_reference_data():
+            st.error("❌ Primero debes configurar los datos de referencia en la pestaña anterior")
+            return
+        
+        # Opciones de monitoreo
+        st.markdown("**📥 Opciones para monitorear drift:**")
+        
+        monitor_option = st.radio(
+            "Selecciona el tipo de monitoreo:",
+            ["📝 Texto individual", "📁 Archivo CSV de producción", "🗄️ Base de datos en tiempo real"],
+            horizontal=True
         )
         
-        if st.button("🔍 Analizar Drift") and text_input:
+        if monitor_option == "📝 Texto individual":
+            st.markdown("**🔍 Analizar Texto Individual de Producción**")
+            
+            text_input = st.text_area(
+                "Ingresa texto de producción para analizar:",
+                placeholder="Escribe aquí el texto de producción que quieres analizar...",
+                height=100,
+                help="Texto que ha llegado en producción y quieres verificar si hay drift"
+            )
+        
+        elif monitor_option == "📁 Archivo CSV de producción":
+            st.markdown("**📁 Analizar Archivo CSV con Datos de Producción**")
+            
+            uploaded_file = st.file_uploader(
+                "Sube un archivo CSV con datos de producción:",
+                type=['csv'],
+                help="Archivo CSV con textos de producción para analizar drift"
+            )
+            
+            if uploaded_file is not None:
+                try:
+                    df = pd.read_csv(uploaded_file)
+                    
+                    # Mostrar columnas disponibles
+                    text_column = st.selectbox(
+                        "Selecciona la columna con los textos de producción:",
+                        df.columns.tolist(),
+                        help="Columna que contiene los textos de producción"
+                    )
+                    
+                    # Mostrar preview
+                    st.markdown("**👀 Preview de los datos:**")
+                    st.dataframe(df.head(), use_container_width=True)
+                    
+                    if st.button("🔍 Analizar Drift del CSV"):
+                        texts = df[text_column].dropna().tolist()
+                        report = drift_monitor.detect_drift(texts, "csv_production_analysis")
+                        _display_drift_results(report)
+                        
+                except Exception as e:
+                    st.error(f"❌ Error procesando CSV: {e}")
+        
+        elif monitor_option == "🗄️ Base de datos en tiempo real":
+            st.markdown("**🗄️ Monitoreo en Tiempo Real desde Base de Datos**")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                db_type = st.selectbox("Tipo de base de datos:", ["PostgreSQL", "MySQL", "SQLite", "MongoDB"])
+                host = st.text_input("Host:", value="localhost")
+                port = st.number_input("Puerto:", value=5432 if db_type == "PostgreSQL" else 3306)
+            
+            with col2:
+                database = st.text_input("Nombre de la base de datos:", value="hate_speech_production")
+                username = st.text_input("Usuario:")
+                password = st.text_input("Contraseña:", type="password")
+            
+            query = st.text_area(
+                "Consulta SQL para datos de producción:",
+                value="SELECT text_column FROM production_data WHERE created_at >= NOW() - INTERVAL '1 hour'",
+                help="Consulta para obtener los textos de producción recientes"
+            )
+            
+            if st.button("🔄 Monitorear Drift en Tiempo Real"):
+                try:
+                    # Simular conexión a base de datos
+                    st.info("🔄 Conectando a la base de datos de producción...")
+                    
+                    # En un caso real, aquí se haría la conexión real
+                    st.warning("⚠️ Funcionalidad de base de datos en desarrollo. Usando datos simulados.")
+                    
+                    # Simular datos de producción
+                    production_texts = [
+                        "This is a new comment from production",
+                        "Another text from real users",
+                        "Production data for drift analysis"
+                    ]
+                    
+                    report = drift_monitor.detect_drift(production_texts, "realtime_production")
+                    _display_drift_results(report)
+                    
+                except Exception as e:
+                    st.error(f"❌ Error conectando a la base de datos: {e}")
+        
+        # Función para mostrar resultados de drift
+        def _display_drift_results(report):
+            """Mostrar resultados de drift de forma consistente"""
+            # Mostrar resultados
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                if report['drift_detected']:
+                    st.error(f"🚨 **Drift Detectado**")
+                else:
+                    st.success(f"✅ **Sin Drift**")
+            
+            with col2:
+                severity_colors = {
+                    'critical': '🔴',
+                    'moderate': '🟡', 
+                    'low': '🟢'
+                }
+                st.metric(
+                    "Severidad",
+                    f"{severity_colors.get(report['drift_severity'], '⚪')} {report['drift_severity'].title()}"
+                )
+            
+            with col3:
+                st.metric(
+                    "Score de Drift",
+                    f"{report['drift_score']:.3f}"
+                )
+            
+            # Mostrar métricas detalladas
+            st.markdown("**📊 Métricas Detalladas**")
+            
+            metrics = report['metrics']
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.metric("KL Divergence", f"{metrics.get('kl_divergence', 0):.3f}")
+                st.metric("Drift en Longitud", f"{metrics.get('length_drift', 0):.3f}")
+            
+            with col2:
+                st.metric("Drift en Palabras", f"{metrics.get('word_count_drift', 0):.3f}")
+                st.metric("Drift en Sparsity", f"{metrics.get('sparsity_drift', 0):.3f}")
+            
+            # Mostrar alertas
+            if report['alerts']:
+                st.markdown("**⚠️ Alertas**")
+                for alert in report['alerts']:
+                    st.warning(f"• {alert}")
+        
+        # Botón para analizar texto individual
+        if monitor_option == "📝 Texto individual" and st.button("🔍 Analizar Drift") and text_input:
             try:
                 # Analizar drift
                 report = drift_monitor.detect_drift([text_input], "live_analysis")
-                
-                # Mostrar resultados
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    if report['drift_detected']:
-                        st.error(f"🚨 **Drift Detectado**")
-                    else:
-                        st.success(f"✅ **Sin Drift**")
-                
-                with col2:
-                    severity_colors = {
-                        'critical': '🔴',
-                        'moderate': '🟡', 
-                        'low': '🟢'
-                    }
-                    st.metric(
-                        "Severidad",
-                        f"{severity_colors.get(report['drift_severity'], '⚪')} {report['drift_severity'].title()}"
-                    )
-                
-                with col3:
-                    st.metric(
-                        "Score de Drift",
-                        f"{report['drift_score']:.3f}"
-                    )
-                
-                # Mostrar métricas detalladas
-                st.markdown("**📊 Métricas Detalladas**")
-                
-                metrics = report['metrics']
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.metric("KL Divergence", f"{metrics.get('kl_divergence', 0):.3f}")
-                    st.metric("Drift en Longitud", f"{metrics.get('length_drift', 0):.3f}")
-                
-                with col2:
-                    st.metric("Drift en Palabras", f"{metrics.get('word_count_drift', 0):.3f}")
-                    st.metric("Drift en Sparsity", f"{metrics.get('sparsity_drift', 0):.3f}")
-                
-                # Mostrar alertas
-                if report['alerts']:
-                    st.markdown("**⚠️ Alertas**")
-                    for alert in report['alerts']:
-                        st.warning(f"• {alert}")
+                _display_drift_results(report)
                 
             except Exception as e:
                 st.error(f"❌ Error en el análisis: {e}")
-        
-        # Opción 2: Cargar archivo
-        st.markdown("---")
-        st.markdown("**📁 Analizar Archivo CSV**")
-        
-        uploaded_file = st.file_uploader(
-            "Sube un archivo CSV con textos para analizar:",
-            type=['csv'],
-            help="El archivo debe tener una columna con textos"
-        )
-        
-        if uploaded_file is not None:
-            try:
-                df = pd.read_csv(uploaded_file)
-                
-                # Seleccionar columna de texto
-                text_column = st.selectbox(
-                    "Selecciona la columna con textos:",
-                    df.columns
-                )
-                
-                if st.button("📊 Analizar Archivo Completo"):
-                    texts = df[text_column].dropna().tolist()
-                    
-                    with st.spinner("Analizando drift..."):
-                        report = drift_monitor.detect_drift(texts, f"file_{uploaded_file.name}")
-                    
-                    # Mostrar resumen
-                    st.success(f"✅ Análisis completado: {len(texts)} textos procesados")
-                    
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        st.metric("Textos Analizados", len(texts))
-                    
-                    with col2:
-                        st.metric("Drift Detectado", "Sí" if report['drift_detected'] else "No")
-                    
-                    with col3:
-                        st.metric("Score Promedio", f"{report['drift_score']:.3f}")
-                    
-            except Exception as e:
-                st.error(f"❌ Error procesando archivo: {e}")
     
     with tab3:
         st.subheader("📈 Historial de Drift")
@@ -1154,7 +1305,14 @@ def data_drift_page():
         - **🎯 Predicciones incorrectas** en nuevos datos
         - **⚠️ Necesidad de reentrenamiento** del modelo
         
-        **Métricas que monitoreamos:**
+        **🔄 Flujo de Monitoreo:**
+        
+        1. **📊 Referencia**: Se establece el dataset de entrenamiento como punto de comparación
+        2. **📥 Producción**: Se analizan nuevos datos que llegan en tiempo real
+        3. **🔍 Comparación**: Se detectan diferencias significativas entre ambos
+        4. **🚨 Alerta**: Se notifica si hay drift que requiera atención
+        
+        **📊 Métricas que monitoreamos:**
         
         - **KL Divergence**: Mide diferencias en distribuciones de características
         - **Drift en Longitud**: Cambios en la longitud promedio de textos
@@ -1162,13 +1320,25 @@ def data_drift_page():
         - **Drift en Sparsity**: Cambios en la densidad de características
         - **Test KS**: Significancia estadística de las diferencias
         
-        **Umbrales de Alerta:**
+        **🎯 Umbrales de Alerta:**
         
         - 🟢 **Bajo Drift** (< 0.1): Cambios menores, modelo estable
         - 🟡 **Drift Moderado** (0.1 - 0.2): Cambios notables, monitorear
         - 🔴 **Drift Crítico** (> 0.2): Cambios significativos, considerar reentrenamiento
         
-        **Recomendaciones:**
+        **💡 Casos de Uso:**
+        
+        - **🗄️ Base de datos**: Monitoreo automático de datos de producción
+        - **📁 Archivos CSV**: Análisis de lotes de datos nuevos
+        - **📝 Texto individual**: Verificación de casos específicos
+        
+        **⚠️ Importante:**
+        
+        - **Solo usa datos de entrenamiento** para configurar la referencia
+        - **Solo usa datos de producción** para monitorear drift
+        - **No mezcles** ambos tipos de datos
+        
+        **🔧 Recomendaciones:**
         
         1. **Monitorear regularmente** los datos de producción
         2. **Configurar alertas** automáticas para drift crítico
