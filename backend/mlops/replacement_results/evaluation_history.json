@@ -286,5 +286,29 @@
     "confidence": 0.053605369642813816,
     "response_time": 0.16,
     "overall_score": 0.7095272036309482
+  },
+  {
+    "model_name": "Model_A",
+    "timestamp": "2025-10-13T08:30:42.573498",
+    "test_samples": 108,
+    "accuracy": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0.0,
+    "confidence": 0,
+    "response_time": 0.20800000000000002,
+    "overall_score": 0.0
+  },
+  {
+    "model_name": "Model_B",
+    "timestamp": "2025-10-13T08:30:42.577429",
+    "test_samples": 108,
+    "accuracy": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0.0,
+    "confidence": 0,
+    "response_time": 0.20800000000000002,
+    "overall_score": 0.0
   }
 ]

@@ -135,8 +135,8 @@ class FinalSmartSelector:
                 return True
         
         # Verificar palabras positivas (solo si hay suficientes)
-        positive_count = sum(1 for word in self.positive_words if word in text_lower)
-        if positive_count >= 2:  # Si tiene 2+ palabras positivas
+        positive_count = sum(1 for word in self.positive_words if re.search(r'\b' + re.escape(word) + r'\b', text_lower))
+        if positive_count >= 1:  # Si tiene 1+ palabras positivas (bajamos el umbral)
             return True
         
         return False
@@ -156,7 +156,8 @@ class FinalSmartSelector:
         
         # 3. Verificar palabras ofensivas directas (solo si no hay contexto positivo)
         for word in self.offensive_words:
-            if word in text_lower:
+            # Usar regex para coincidencia de palabras completas
+            if re.search(r'\b' + re.escape(word) + r'\b', text_lower):
                 return 'Offensive Language', 0.8, 'offensive_word'
         
         # 4. Verificar evasiones (solo si no hay contexto positivo)

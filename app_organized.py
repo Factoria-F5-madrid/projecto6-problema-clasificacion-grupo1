@@ -222,7 +222,23 @@ def analyze_text(system, text):
     """Analiza el texto y muestra los resultados"""
     
     with st.spinner("🔄 Analizando..."):
-        result = system.predict(text)
+        # Usar el método correcto según el tipo de sistema
+        if hasattr(system, 'detect_hate_speech'):
+            result = system.detect_hate_speech(text)
+        elif hasattr(system, 'predict_ensemble'):
+            # Para AdvancedHybridSystem
+            prediction = system.predict_ensemble(text)
+            result = {
+                'prediction': prediction,
+                'confidence': 0.85,  # Valor por defecto
+                'method': 'ensemble',
+                'explanation': f'Predicción del ensemble: {prediction}'
+            }
+        elif hasattr(system, 'predict'):
+            result = system.predict(text)
+        else:
+            st.error("Sistema no tiene método de predicción válido")
+            return
     
     # Results
     st.markdown("---")
@@ -271,7 +287,24 @@ def compare_models(systems, text):
     for name, system in systems.items():
         with st.spinner(f"🔄 Analizando con {name}..."):
             try:
-                result = system.predict(text)
+                # Usar el método correcto según el tipo de sistema
+                if hasattr(system, 'detect_hate_speech'):
+                    result = system.detect_hate_speech(text)
+                elif hasattr(system, 'predict_ensemble'):
+                    # Para AdvancedHybridSystem
+                    prediction = system.predict_ensemble(text)
+                    result = {
+                        'prediction': prediction,
+                        'confidence': 0.85,  # Valor por defecto
+                        'method': 'ensemble'
+                    }
+                elif hasattr(system, 'predict'):
+                    result = system.predict(text)
+                else:
+                    st.error(f"Sistema {name} no tiene método de predicción válido")
+                    results[name] = None
+                    continue
+                    
                 results[name] = result
             except Exception as e:
                 st.error(f"Error con {name}: {e}")
@@ -283,11 +316,20 @@ def compare_models(systems, text):
         
         for name, result in results.items():
             if result:
+                # Verificar estructura del resultado
+                if isinstance(result, dict):
+                    prediction = result.get('prediction', 'N/A')
+                    confidence = result.get('confidence', 0)
+                    method = result.get('method', 'N/A')
+                else:
+                    st.error(f"Resultado inesperado para {name}: {type(result)}")
+                    continue
+                
                 comparison_data.append({
                     'Modelo': name,
-                    'Clasificación': result['prediction'],
-                    'Confianza': f"{result['confidence']:.1%}",
-                    'Método': result['method'].replace('_', ' ').title()
+                    'Clasificación': prediction,
+                    'Confianza': f"{confidence:.1%}" if isinstance(confidence, (int, float)) else str(confidence),
+                    'Método': str(method).replace('_', ' ').title()
                 })
         
         if comparison_data:
@@ -971,32 +1013,28 @@ def auto_replacement_page():
         # Input de datos de prueba
         st.markdown("**📊 Datos de Prueba**")
         
-        # Opción 1: Cargar desde CSV
-        uploaded_file = st.file_uploader(
-            "Subir archivo CSV con datos de prueba:",
-            type=['csv'],
-            help="Archivo debe tener columnas: 'text', 'true_label'"
+        # Explicación de opciones
+        st.info("""
+        **💡 Opciones de Datos:**
+        - **📁 CSV Real**: Para evaluación con datos de producción reales
+        - **🧪 Ejemplos Simples**: Para pruebas rápidas (recomendado para empezar)
+        - **📊 Ejemplos Avanzados**: Para pruebas más realistas
+        """)
+        
+        # Selector de tipo de datos
+        data_option = st.radio(
+            "Selecciona el tipo de datos:",
+            ["🧪 Ejemplos Simples", "📊 Ejemplos Avanzados", "📁 Subir CSV Real"],
+            help="Los ejemplos son perfectos para probar el sistema"
         )
         
         test_data = None
         true_labels = None
         
-        if uploaded_file is not None:
-            try:
-                df = pd.read_csv(uploaded_file)
-                
-                if 'text' in df.columns and 'true_label' in df.columns:
-                    test_data = df['text'].dropna().tolist()
-                    true_labels = df['true_label'].dropna().tolist()
-                    
-                    st.success(f"✅ Datos cargados: {len(test_data)} textos")
-                else:
-                    st.error("❌ El archivo debe tener columnas 'text' y 'true_label'")
-            except Exception as e:
-                st.error(f"❌ Error cargando archivo: {e}")
-        
-        # Opción 2: Datos de ejemplo
-        if st.checkbox("Usar datos de ejemplo"):
+        if data_option == "🧪 Ejemplos Simples":
+            st.markdown("**🧪 Datos de Ejemplo Simples**")
+            st.markdown("*Perfecto para probar el sistema rápidamente*")
+            
             test_data = [
                 "fuck you", "hello world", "you are stupid", "amazing work",
                 "hate speech", "brilliant idea", "you are a jerk", "wonderful job",
@@ -1004,7 +1042,102 @@ def auto_replacement_page():
             ] * 5  # 60 textos
             
             true_labels = ["offensive", "neither", "offensive", "neither"] * 15
-            st.info(f"📊 Usando {len(test_data)} textos de ejemplo")
+            st.success(f"✅ {len(test_data)} textos de ejemplo cargados")
+            
+        elif data_option == "📊 Ejemplos Avanzados":
+            st.markdown("**📊 Datos de Ejemplo Avanzados**")
+            st.markdown("*Más realistas para pruebas detalladas*")
+            
+            test_data = [
+                # Textos ofensivos
+                "fuck you", "you are stupid", "hate speech", "you are a jerk",
+                "that's terrible", "poor quality", "you suck", "this is shit",
+                "fucking stupid", "you're an idiot", "hate this", "awful work",
+                # Textos neutrales
+                "hello world", "amazing work", "brilliant idea", "wonderful job",
+                "this is great", "excellent work", "good job", "nice work",
+                "thank you", "well done", "perfect", "outstanding",
+                # Textos de hate speech
+                "women are inferior", "men are better", "hate immigrants", 
+                "kill all jews", "blacks are stupid", "gays are wrong",
+                "muslims are terrorists", "women belong in kitchen", "men are trash",
+                "white power", "all lives matter", "build the wall"
+            ] * 3  # 90 textos
+            
+            true_labels = (
+                ["offensive"] * 12 + ["neither"] * 12 + ["hate_speech"] * 12
+            ) * 3
+            st.success(f"✅ {len(test_data)} textos avanzados cargados")
+            
+        elif data_option == "📁 Subir CSV Real":
+            st.markdown("**📁 Subir CSV Real**")
+            st.markdown("*Para evaluación con datos de producción reales*")
+            
+            # Mostrar ejemplo de CSV válido
+            with st.expander("📋 Ver ejemplo de CSV válido"):
+                example_data = {
+                    'text': ['fuck you', 'hello world', 'you are stupid', 'amazing work'],
+                    'true_label': ['offensive', 'neither', 'offensive', 'neither']
+                }
+                st.dataframe(pd.DataFrame(example_data))
+                st.markdown("**💾 Descargar plantilla:**")
+                csv_example = pd.DataFrame(example_data).to_csv(index=False)
+                st.download_button(
+                    label="📥 Descargar plantilla.csv",
+                    data=csv_example,
+                    file_name="plantilla_evaluacion.csv",
+                    mime="text/csv"
+                )
+            
+            uploaded_file = st.file_uploader(
+                "Subir archivo CSV:",
+                type=['csv'],
+                help="Debe tener columnas 'text' y 'true_label'"
+            )
+            
+            if uploaded_file is not None:
+                try:
+                    df = pd.read_csv(uploaded_file)
+                    
+                    # Validar columnas
+                    required_columns = ['text', 'true_label']
+                    missing_columns = [col for col in required_columns if col not in df.columns]
+                    
+                    if missing_columns:
+                        st.error(f"❌ Faltan columnas requeridas: {missing_columns}")
+                        st.info("💡 Usa la plantilla de ejemplo para el formato correcto")
+                    else:
+                        # Validar datos
+                        test_data = df['text'].dropna().tolist()
+                        true_labels = df['true_label'].dropna().tolist()
+                        
+                        if len(test_data) == 0:
+                            st.error("❌ No hay datos válidos en el archivo")
+                        elif len(test_data) != len(true_labels):
+                            st.error("❌ El número de textos y etiquetas no coincide")
+                        else:
+                            # Validar etiquetas
+                            valid_labels = ['offensive', 'neither', 'hate_speech', 'clean']
+                            invalid_labels = [label for label in set(true_labels) if label not in valid_labels]
+                            
+                            if invalid_labels:
+                                st.warning(f"⚠️ Etiquetas no reconocidas: {invalid_labels}")
+                                st.info("💡 Etiquetas válidas: offensive, neither, hate_speech, clean")
+                            
+                            st.success(f"✅ Datos cargados: {len(test_data)} textos")
+                            
+                            # Mostrar resumen
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                st.metric("Textos", len(test_data))
+                            with col2:
+                                st.metric("Etiquetas únicas", len(set(true_labels)))
+                            with col3:
+                                st.metric("Distribución", f"{len(test_data)/len(set(true_labels)):.1f} por clase")
+                            
+                except Exception as e:
+                    st.error(f"❌ Error cargando archivo: {e}")
+                    st.info("💡 Asegúrate de que el archivo sea un CSV válido")
         
         # Evaluar modelos
         if test_data and true_labels:
