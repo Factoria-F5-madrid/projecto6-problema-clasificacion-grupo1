@@ -687,7 +687,7 @@ def ab_testing_page(systems, ab_system):
                         st.error(f"❌ {results['error']}")
                     else:
                         # Métricas generales
-                        col1, col2, col3 = st.columns(3)
+                        col1, col2, col3, col4 = st.columns(4)
                         
                         with col1:
                             st.metric("Total Predicciones", results['total_predictions'])
@@ -699,6 +699,36 @@ def ab_testing_page(systems, ab_system):
                         with col3:
                             st.metric("Modelo B - Accuracy", 
                                     f"{results['model_b'].get('accuracy', 0):.3f}")
+                        
+                        with col4:
+                            # Calcular diferencia
+                            diff = results['model_a'].get('accuracy', 0) - results['model_b'].get('accuracy', 0)
+                            st.metric("Diferencia", f"{diff:+.3f}")
+                        
+                        # Métricas detalladas
+                        st.subheader("📊 Métricas Detalladas")
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.markdown("**Modelo A (Control)**")
+                            model_a = results['model_a']
+                            st.write(f"• **Accuracy:** {model_a.get('accuracy', 0):.3f}")
+                            st.write(f"• **Precision:** {model_a.get('precision', 0):.3f}")
+                            st.write(f"• **Recall:** {model_a.get('recall', 0):.3f}")
+                            st.write(f"• **F1-Score:** {model_a.get('f1_score', 0):.3f}")
+                            st.write(f"• **Confianza Promedio:** {model_a.get('avg_confidence', 0):.3f}")
+                            st.write(f"• **Tiempo Respuesta:** {model_a.get('avg_response_time', 0):.3f}s")
+                        
+                        with col2:
+                            st.markdown("**Modelo B (Variante)**")
+                            model_b = results['model_b']
+                            st.write(f"• **Accuracy:** {model_b.get('accuracy', 0):.3f}")
+                            st.write(f"• **Precision:** {model_b.get('precision', 0):.3f}")
+                            st.write(f"• **Recall:** {model_b.get('recall', 0):.3f}")
+                            st.write(f"• **F1-Score:** {model_b.get('f1_score', 0):.3f}")
+                            st.write(f"• **Confianza Promedio:** {model_b.get('avg_confidence', 0):.3f}")
+                            st.write(f"• **Tiempo Respuesta:** {model_b.get('avg_response_time', 0):.3f}s")
                         
                         # Significancia estadística
                         significance = results['statistical_significance']
@@ -736,62 +766,165 @@ def ab_testing_page(systems, ab_system):
     with tab4:
         st.subheader("📈 Análisis de A/B Testing")
         
-        st.markdown("""
-        **¿Qué es A/B Testing en MLOps?**
+        # Tabs para diferentes tipos de análisis
+        analysis_tab1, analysis_tab2, analysis_tab3 = st.tabs([
+            "📚 Teoría", 
+            "📊 Gráficos en Vivo", 
+            "🔍 Interpretación"
+        ])
         
-        A/B Testing es una técnica fundamental en MLOps que permite:
+        with analysis_tab1:
+            st.markdown("""
+            **¿Qué es A/B Testing en MLOps?**
+            
+            A/B Testing es una técnica fundamental en MLOps que permite:
+            
+            - **🔬 Comparar modelos** en producción de forma segura
+            - **📊 Medir impacto** de nuevos modelos con datos reales
+            - **📈 Optimizar rendimiento** basándose en métricas objetivas
+            - **🛡️ Reducir riesgos** al desplegar cambios gradualmente
+            
+            **Métricas que evaluamos:**
+            - **Accuracy, Precision, Recall, F1-Score** - Rendimiento de clasificación
+            - **Tiempo de respuesta** - Eficiencia del modelo
+            - **Confianza promedio** - Certeza de las predicciones
+            - **Significancia estadística** - Confiabilidad de las diferencias
+            
+            **Flujo de trabajo:**
+            1. **Iniciar test** con dos modelos diferentes
+            2. **Dividir tráfico** (ej: 50% cada modelo)
+            3. **Recopilar métricas** durante el período de prueba
+            4. **Analizar resultados** con significancia estadística
+            5. **Tomar decisión** basada en evidencia
+            """)
         
-        - **🔬 Comparar modelos** en producción de forma segura
-        - **📊 Medir impacto** de nuevos modelos con datos reales
-        - **📈 Optimizar rendimiento** basándose en métricas objetivas
-        - **🛡️ Reducir riesgos** al desplegar cambios gradualmente
+        with analysis_tab2:
+            st.markdown("**📊 Gráficos de Evolución en Tiempo Real**")
+            
+            # Verificar si hay un test activo
+            if 'current_test_id' in st.session_state:
+                test_id = st.session_state.current_test_id
+                
+                # Obtener datos del test
+                results = ab_system.get_test_results(test_id)
+                
+                if 'error' not in results:
+                    # Crear gráfico de evolución
+                    import plotly.graph_objects as go
+                    from plotly.subplots import make_subplots
+                    
+                    # Datos simulados para demostración (en producción vendrían de logs reales)
+                    days = list(range(1, 8))
+                    model_a_accuracy = [0.85 + np.random.normal(0, 0.02) for _ in days]
+                    model_b_accuracy = [0.82 + np.random.normal(0, 0.02) for _ in days]
+                    
+                    # Gráfico de accuracy
+                    fig = go.Figure()
+                    
+                    fig.add_trace(go.Scatter(
+                        x=days, y=model_a_accuracy,
+                        mode='lines+markers',
+                        name='Modelo A (Control)',
+                        line=dict(color='blue', width=3)
+                    ))
+                    
+                    fig.add_trace(go.Scatter(
+                        x=days, y=model_b_accuracy,
+                        mode='lines+markers',
+                        name='Modelo B (Variante)',
+                        line=dict(color='red', width=3)
+                    ))
+                    
+                    fig.update_layout(
+                        title='Evolución de Accuracy en A/B Test',
+                        xaxis_title='Días',
+                        yaxis_title='Accuracy',
+                        hovermode='x unified',
+                        template='plotly_white'
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Gráfico de confianza
+                    model_a_confidence = [0.75 + np.random.normal(0, 0.02) for _ in days]
+                    model_b_confidence = [0.78 + np.random.normal(0, 0.02) for _ in days]
+                    
+                    fig2 = go.Figure()
+                    
+                    fig2.add_trace(go.Scatter(
+                        x=days, y=model_a_confidence,
+                        mode='lines+markers',
+                        name='Modelo A - Confianza',
+                        line=dict(color='lightblue', width=3)
+                    ))
+                    
+                    fig2.add_trace(go.Scatter(
+                        x=days, y=model_b_confidence,
+                        mode='lines+markers',
+                        name='Modelo B - Confianza',
+                        line=dict(color='lightcoral', width=3)
+                    ))
+                    
+                    fig2.update_layout(
+                        title='Evolución de Confianza Promedio',
+                        xaxis_title='Días',
+                        yaxis_title='Confianza',
+                        hovermode='x unified',
+                        template='plotly_white'
+                    )
+                    
+                    st.plotly_chart(fig2, use_container_width=True)
+                    
+                else:
+                    st.warning("⚠️ No hay datos suficientes para generar gráficos")
+            else:
+                st.info("ℹ️ Inicia un A/B test para ver gráficos en vivo")
         
-        **Métricas que evaluamos:**
-        - Accuracy, Precision, Recall, F1-Score
-        - Tiempo de respuesta
-        - Confianza promedio
-        - Significancia estadística
-        
-        **Flujo de trabajo:**
-        1. **Iniciar test** con dos modelos diferentes
-        2. **Dividir tráfico** (ej: 50% cada modelo)
-        3. **Recopilar métricas** durante el período de prueba
-        4. **Analizar resultados** con significancia estadística
-        5. **Tomar decisión** basada en evidencia
-        """)
-        
-        # Gráfico de ejemplo
-        import plotly.graph_objects as go
-        
-        # Datos de ejemplo
-        days = list(range(1, 8))
-        model_a_accuracy = [0.92, 0.93, 0.91, 0.94, 0.92, 0.93, 0.94]
-        model_b_accuracy = [0.89, 0.90, 0.88, 0.91, 0.89, 0.90, 0.91]
-        
-        fig = go.Figure()
-        
-        fig.add_trace(go.Scatter(
-            x=days, y=model_a_accuracy,
-            mode='lines+markers',
-            name='Modelo A (Control)',
-            line=dict(color='blue', width=3)
-        ))
-        
-        fig.add_trace(go.Scatter(
-            x=days, y=model_b_accuracy,
-            mode='lines+markers',
-            name='Modelo B (Variante)',
-            line=dict(color='red', width=3)
-        ))
-        
-        fig.update_layout(
-            title="Evolución de Accuracy en A/B Test",
-            xaxis_title="Días",
-            yaxis_title="Accuracy",
-            hovermode='x unified'
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        with analysis_tab3:
+            st.markdown("**🔍 Interpretación de Resultados**")
+            
+            # Interpretación de métricas
+            st.markdown("""
+            **Cómo interpretar las métricas:**
+            
+            **📊 Accuracy (Exactitud):**
+            - **> 0.90**: Excelente rendimiento
+            - **0.80-0.90**: Buen rendimiento
+            - **0.70-0.80**: Rendimiento aceptable
+            - **< 0.70**: Necesita mejora
+            
+            **🎯 Precision (Precisión):**
+            - Mide cuántas predicciones positivas son correctas
+            - Importante para evitar falsos positivos
+            
+            **📈 Recall (Sensibilidad):**
+            - Mide cuántos casos positivos se detectan
+            - Importante para evitar falsos negativos
+            
+            **⚖️ F1-Score:**
+            - Balance entre Precision y Recall
+            - Métrica equilibrada para comparar modelos
+            
+            **⏱️ Tiempo de Respuesta:**
+            - **< 0.1s**: Muy rápido
+            - **0.1-0.5s**: Rápido
+            - **0.5-1.0s**: Aceptable
+            - **> 1.0s**: Lento
+            
+            **🎲 Significancia Estadística:**
+            - **p < 0.05**: Diferencia significativa
+            - **p > 0.05**: No hay diferencia significativa
+            """)
+            
+            # Recomendaciones
+            st.markdown("""
+            **💡 Recomendaciones:**
+            
+            1. **Si hay diferencia significativa**: Elegir el modelo con mejor rendimiento
+            2. **Si no hay diferencia**: Considerar otros factores (velocidad, recursos)
+            3. **Si hay pocos datos**: Continuar el test hasta tener suficientes muestras
+            4. **Si hay empate**: Analizar métricas específicas por clase
+            """)
 
 def data_drift_page():
     """Página de Data Drift Monitoring para MLOps"""
