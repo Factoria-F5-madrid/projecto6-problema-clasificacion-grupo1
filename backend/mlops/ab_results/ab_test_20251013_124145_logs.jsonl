@@ -1,0 +1,1 @@
+{"timestamp": "2025-10-13T12:41:51.454127", "test_id": "ab_test_20251013_124145", "model_variant": "A", "text": "hola", "prediction": "Neither", "confidence": 0.8, "actual_label": null, "response_time": 0.0008780956268310547, "correct": null}
