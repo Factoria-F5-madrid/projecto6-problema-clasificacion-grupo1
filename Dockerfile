@@ -35,5 +35,8 @@ ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
+# Inicializar base de datos (opcional)
+RUN python scripts/database/init_database.py || echo "Base de datos no inicializada - continuando sin logs persistentes"
+
 # Comando para ejecutar la aplicación
 CMD ["streamlit", "run", "frontend/apps/app_organized.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
