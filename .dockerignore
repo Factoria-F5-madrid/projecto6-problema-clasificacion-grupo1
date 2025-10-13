@@ -1,0 +1,95 @@
+# ===========================================
+# DOCKERIGNORE - ARCHIVOS A EXCLUIR DE LA IMAGEN DOCKER
+# ===========================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+
+# Documentation (opcional - incluir si quieres)
+# docs/
+# README*.md
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Data files (opcional - incluir si quieres)
+# data/raw/
+# data/processed/
+
+# Scripts de desarrollo
+scripts/
+
+# Archivos de configuración local
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Archivos de sistema
+.dockerignore
+Dockerfile
+docker-compose.yml
+render.yaml

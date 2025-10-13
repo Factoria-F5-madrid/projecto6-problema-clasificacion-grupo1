@@ -1,0 +1,51 @@
+# ===========================================
+# DOCKER COMPOSE PARA DESARROLLO LOCAL
+# ===========================================
+
+version: '3.8'
+
+services:
+  # Aplicación principal de detección de hate speech
+  hate-speech-app:
+    build: .
+    container_name: hate-speech-detector
+    ports:
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    volumes:
+      # Montar código para desarrollo (hot reload)
+      - ./frontend:/app/frontend
+      - ./backend:/app/backend
+      - ./config:/app/config
+      - ./docs:/app/docs
+      # Excluir archivos grandes
+      - /app/data
+    restart: unless-stopped
+    networks:
+      - hate-speech-network
+
+  # Servicio opcional para base de datos (futuro)
+  # database:
+  #   image: postgres:15
+  #   container_name: hate-speech-db
+  #   environment:
+  #     POSTGRES_DB: hate_speech
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - hate-speech-network
+
+networks:
+  hate-speech-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
