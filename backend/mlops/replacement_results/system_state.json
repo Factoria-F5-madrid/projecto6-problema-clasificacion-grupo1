@@ -1,0 +1,234 @@
+{
+  "current_model": {
+    "name": "Model_B",
+    "model_path": "backend/models/saved/demo_model_b.pkl",
+    "type": "hybrid",
+    "status": "production",
+    "registered_at": "2025-10-13T11:15:59.281027",
+    "evaluations": [
+      {
+        "timestamp": "2025-10-13T11:16:01.980983",
+        "model_name": "Model_B",
+        "accuracy": 0.9,
+        "precision": 0.9130434782608695,
+        "recall": 0.9,
+        "f1_score": 0.8946648426812586,
+        "confidence": 0.8125000000000001,
+        "response_time": 0.05,
+        "overall_score": 0.8727916641884258,
+        "test_samples": 30
+      },
+      {
+        "timestamp": "2025-10-13T11:17:18.287605",
+        "model_name": "Model_B",
+        "accuracy": 0.9375,
+        "precision": 0.9444444444444444,
+        "recall": 0.9375,
+        "f1_score": 0.9372549019607843,
+        "confidence": 0.8125000000000001,
+        "response_time": 0.05,
+        "overall_score": 0.9044648692810459,
+        "test_samples": 16
+      },
+      {
+        "timestamp": "2025-10-13T11:27:14.581500",
+        "model_name": "Model_B",
+        "accuracy": 0.9375,
+        "precision": 0.9444444444444444,
+        "recall": 0.9375,
+        "f1_score": 0.9372549019607843,
+        "confidence": 0.8125000000000001,
+        "response_time": 0.05,
+        "overall_score": 0.9044648692810459,
+        "test_samples": 16
+      },
+      {
+        "timestamp": "2025-10-13T11:40:24.539514",
+        "model_name": "Model_B",
+        "accuracy": 0.9375,
+        "precision": 0.9444444444444444,
+        "recall": 0.9375,
+        "f1_score": 0.9372549019607843,
+        "confidence": 0.8125000000000001,
+        "response_time": 0.05,
+        "overall_score": 0.9044648692810459,
+        "test_samples": 16
+      }
+    ],
+    "performance_metrics": {
+      "avg_accuracy": 0.9375,
+      "avg_precision": 0.9444444444444444,
+      "avg_recall": 0.9375,
+      "avg_f1_score": 0.9372549019607843,
+      "avg_confidence": 0.8125000000000001,
+      "avg_response_time": 0.05,
+      "avg_overall_score": 0.9044648692810459,
+      "total_evaluations": 4,
+      "last_evaluation": "2025-10-13T11:40:24.539514"
+    }
+  },
+  "candidate_models": [
+    {
+      "name": "Model_A",
+      "model_path": "backend/models/saved/demo_model_a.pkl",
+      "type": "hybrid",
+      "status": "production",
+      "registered_at": "2025-10-13T11:15:59.280427",
+      "evaluations": [
+        {
+          "timestamp": "2025-10-13T11:16:01.904355",
+          "model_name": "Model_A",
+          "accuracy": 0.6666666666666666,
+          "precision": 0.8333333333333334,
+          "recall": 0.6666666666666666,
+          "f1_score": 0.6666666666666666,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.70625,
+          "test_samples": 30
+        },
+        {
+          "timestamp": "2025-10-13T11:17:18.271465",
+          "model_name": "Model_A",
+          "accuracy": 0.875,
+          "precision": 0.9,
+          "recall": 0.875,
+          "f1_score": 0.873015873015873,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.8546031746031748,
+          "test_samples": 16
+        },
+        {
+          "timestamp": "2025-10-13T11:27:14.562042",
+          "model_name": "Model_A",
+          "accuracy": 0.875,
+          "precision": 0.9,
+          "recall": 0.875,
+          "f1_score": 0.873015873015873,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.8546031746031748,
+          "test_samples": 16
+        },
+        {
+          "timestamp": "2025-10-13T11:40:24.519909",
+          "model_name": "Model_A",
+          "accuracy": 0.875,
+          "precision": 0.9,
+          "recall": 0.875,
+          "f1_score": 0.873015873015873,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.8546031746031748,
+          "test_samples": 16
+        },
+        {
+          "timestamp": "2025-10-13T11:40:44.900782",
+          "model_name": "Model_A",
+          "accuracy": 0.875,
+          "precision": 0.9,
+          "recall": 0.875,
+          "f1_score": 0.873015873015873,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.8546031746031748,
+          "test_samples": 16
+        }
+      ],
+      "performance_metrics": {
+        "avg_accuracy": 0.875,
+        "avg_precision": 0.9,
+        "avg_recall": 0.875,
+        "avg_f1_score": 0.873015873015873,
+        "avg_confidence": 0.8125000000000001,
+        "avg_response_time": 0.05,
+        "avg_overall_score": 0.8546031746031748,
+        "total_evaluations": 5,
+        "last_evaluation": "2025-10-13T11:40:44.900782"
+      }
+    },
+    {
+      "name": "Model_B",
+      "model_path": "backend/models/saved/demo_model_b.pkl",
+      "type": "hybrid",
+      "status": "production",
+      "registered_at": "2025-10-13T11:15:59.281027",
+      "evaluations": [
+        {
+          "timestamp": "2025-10-13T11:16:01.980983",
+          "model_name": "Model_B",
+          "accuracy": 0.9,
+          "precision": 0.9130434782608695,
+          "recall": 0.9,
+          "f1_score": 0.8946648426812586,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.8727916641884258,
+          "test_samples": 30
+        },
+        {
+          "timestamp": "2025-10-13T11:17:18.287605",
+          "model_name": "Model_B",
+          "accuracy": 0.9375,
+          "precision": 0.9444444444444444,
+          "recall": 0.9375,
+          "f1_score": 0.9372549019607843,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.9044648692810459,
+          "test_samples": 16
+        },
+        {
+          "timestamp": "2025-10-13T11:27:14.581500",
+          "model_name": "Model_B",
+          "accuracy": 0.9375,
+          "precision": 0.9444444444444444,
+          "recall": 0.9375,
+          "f1_score": 0.9372549019607843,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.9044648692810459,
+          "test_samples": 16
+        },
+        {
+          "timestamp": "2025-10-13T11:40:24.539514",
+          "model_name": "Model_B",
+          "accuracy": 0.9375,
+          "precision": 0.9444444444444444,
+          "recall": 0.9375,
+          "f1_score": 0.9372549019607843,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.9044648692810459,
+          "test_samples": 16
+        },
+        {
+          "timestamp": "2025-10-13T11:40:44.931063",
+          "model_name": "Model_B",
+          "accuracy": 0.9375,
+          "precision": 0.9444444444444444,
+          "recall": 0.9375,
+          "f1_score": 0.9372549019607843,
+          "confidence": 0.8125000000000001,
+          "response_time": 0.05,
+          "overall_score": 0.9044648692810459,
+          "test_samples": 16
+        }
+      ],
+      "performance_metrics": {
+        "avg_accuracy": 0.9375,
+        "avg_precision": 0.9444444444444444,
+        "avg_recall": 0.9375,
+        "avg_f1_score": 0.9372549019607843,
+        "avg_confidence": 0.8125000000000001,
+        "avg_response_time": 0.05,
+        "avg_overall_score": 0.9044648692810459,
+        "total_evaluations": 5,
+        "last_evaluation": "2025-10-13T11:40:44.931063"
+      }
+    }
+  ],
+  "evaluation_history": [],
+  "last_updated": "2025-10-13T11:40:47.395055"
+}

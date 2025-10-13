@@ -1,0 +1,22 @@
+{
+  "window_name": "test_low_drift",
+  "timestamp": "2025-10-13T00:48:41.986522",
+  "new_samples": 24,
+  "reference_samples": 95,
+  "drift_detected": true,
+  "drift_severity": "critical",
+  "drift_score": 79.54928860037374,
+  "metrics": {
+    "kl_divergence": 396.97011394117925,
+    "length_drift": 0.1403917910447761,
+    "word_count_drift": 0.07440476190476181,
+    "sparsity_drift": 0.002708978328173406,
+    "ks_statistic": 0.5588235294117647,
+    "ks_pvalue": 3.1184251957839234e-05
+  },
+  "alerts": [
+    "KL Divergence cr\u00edtica: 396.970",
+    "Drift moderado en longitud: 0.140",
+    "Distribuci\u00f3n significativamente diferente (KS p-value: 0.000)"
+  ]
+}
