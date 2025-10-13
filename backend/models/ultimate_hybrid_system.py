@@ -11,6 +11,13 @@ import joblib
 import os
 from datetime import datetime
 
+# Importar preprocesador robusto con detector de evasiones
+try:
+    from ..utils.robust_preprocessor import RobustPreprocessor
+    PREPROCESSOR_AVAILABLE = True
+except ImportError:
+    PREPROCESSOR_AVAILABLE = False
+
 class UltimateHybridSystem:
     """Sistema híbrido definitivo con máxima precisión"""
     
@@ -18,6 +25,14 @@ class UltimateHybridSystem:
         self.class_names = {0: 'Hate Speech', 1: 'Offensive Language', 2: 'Neither'}
         self.models = {}
         self.bert_available = False
+        
+        # Inicializar preprocesador robusto con detector de evasiones
+        if PREPROCESSOR_AVAILABLE:
+            self.preprocessor = RobustPreprocessor()
+            print("🧠 Detector de evasiones inteligente: ✅")
+        else:
+            self.preprocessor = None
+            print("🧠 Detector de evasiones inteligente: ❌")
         
         # Cargar todos los componentes
         self._load_all_models()
@@ -314,6 +329,20 @@ class UltimateHybridSystem:
     
     def predict(self, text):
         """Predecir usando sistema híbrido definitivo"""
+        
+        # 0. Preprocesar texto con detector de evasiones
+        if self.preprocessor is not None:
+            try:
+                # Normalizar evasiones (f*ck -> fuck, @sshole -> asshole, etc.)
+                normalized_text = self.preprocessor.normalize_evasions(text)
+                print(f"🔍 Texto original: '{text}'")
+                print(f"🔧 Texto normalizado: '{normalized_text}'")
+                
+                # Usar texto normalizado para predicciones
+                text = normalized_text
+            except Exception as e:
+                print(f"⚠️ Error en preprocesamiento: {e}")
+                # Continuar con texto original si falla
         
         # 1. Reglas inteligentes (máxima prioridad)
         rules_result = self._predict_with_rules(text)

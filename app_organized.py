@@ -39,7 +39,7 @@ def load_systems():
     """Carga todos los sistemas disponibles"""
     try:
         systems = {
-            'Final': FinalSmartSelector(),
+            'Final': UltimateHybridSystem(),
             'Improved': ImprovedSmartSelector(),
             'Advanced': AdvancedHybridSystem()
         }

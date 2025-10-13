@@ -15,6 +15,13 @@ try:
 except ImportError:
     LANGDETECT_AVAILABLE = False
 
+# Importar el detector inteligente de evasiones
+try:
+    from .smart_evasion_detector import SmartEvasionDetector
+    EVASION_DETECTOR_AVAILABLE = True
+except ImportError:
+    EVASION_DETECTOR_AVAILABLE = False
+
 class RobustPreprocessor:
     """Preprocesador robusto para normalización de evasiones y limpieza de texto"""
     
@@ -22,6 +29,12 @@ class RobustPreprocessor:
         """Inicializar preprocesador con patrones de evasión"""
         self.evasion_patterns = self._create_evasion_patterns()
         self.compiled_patterns = self._compile_patterns()
+        
+        # Inicializar detector inteligente de evasiones
+        if EVASION_DETECTOR_AVAILABLE:
+            self.smart_evasion_detector = SmartEvasionDetector()
+        else:
+            self.smart_evasion_detector = None
         
     def _create_evasion_patterns(self) -> Dict[str, str]:
         """Crear patrones de evasión comunes"""
@@ -117,7 +130,7 @@ class RobustPreprocessor:
     
     def normalize_evasions(self, text: str) -> str:
         """
-        Normalizar evasiones en el texto
+        Normalizar evasiones en el texto usando detector inteligente
         
         Args:
             text: Texto a normalizar
@@ -128,9 +141,19 @@ class RobustPreprocessor:
         if not isinstance(text, str):
             return text
         
+        # Usar detector inteligente si está disponible
+        if self.smart_evasion_detector is not None:
+            try:
+                # Usar el detector inteligente para normalización
+                normalized_text = self.smart_evasion_detector.normalize_text(text)
+                return normalized_text
+            except Exception as e:
+                print(f"Error en detector inteligente, usando método básico: {e}")
+        
+        # Fallback al método básico si el detector inteligente falla
         normalized_text = text.lower()
         
-        # Aplicar patrones de evasión
+        # Aplicar patrones de evasión básicos
         for pattern, replacement in self.evasion_patterns.items():
             if pattern in normalized_text:
                 # Usar regex para reemplazo más preciso
