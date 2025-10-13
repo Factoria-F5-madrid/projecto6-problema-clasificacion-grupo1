@@ -13,7 +13,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Add backend to path for imports
-sys.path.append('backend')
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(project_root, 'backend'))
 
 # Import our optimized model components
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -238,7 +239,8 @@ def predict_hate_speech(text, model, vectorizer, preprocessor=None, confidence_b
 def main():
     # Header with banner image
     try:
-        st.image("hatespeech.png", use_container_width=True)
+        banner_path = os.path.join(project_root, "config", "hatespeech.png")
+        st.image(banner_path, use_container_width=True)
     except Exception as e:
         st.warning("No se pudo cargar la imagen del banner")
     

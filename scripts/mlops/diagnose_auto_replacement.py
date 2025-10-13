@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 # Añadir el path del backend
-sys.path.append('backend')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
 
 from mlops.auto_model_replacement import AutoModelReplacement
 

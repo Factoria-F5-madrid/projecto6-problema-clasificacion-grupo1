@@ -18,7 +18,8 @@ plt.style.use('default')
 sns.set_style("whitegrid")
 
 # Add backend to path
-sys.path.append('backend')
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(project_root, 'backend'))
 
 # Import our systems
 from models.final_smart_selector import FinalSmartSelector

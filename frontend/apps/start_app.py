@@ -38,19 +38,19 @@ def main():
             if choice == "1":
                 print("\n🚀 Iniciando App Simple...")
                 print("📱 Abre tu navegador en: http://localhost:8515")
-                subprocess.run([sys.executable, "-m", "streamlit", "run", "app_simple.py", "--server.port", "8515"])
+                subprocess.run([sys.executable, "-m", "streamlit", "run", "frontend/apps/app_simple.py", "--server.port", "8515"])
                 break
                 
             elif choice == "2":
                 print("\n🚀 Iniciando App Organizada...")
                 print("📱 Abre tu navegador en: http://localhost:8516")
-                subprocess.run([sys.executable, "-m", "streamlit", "run", "app_organized.py", "--server.port", "8516"])
+                subprocess.run([sys.executable, "-m", "streamlit", "run", "frontend/apps/app_organized.py", "--server.port", "8516"])
                 break
                 
             elif choice == "3":
                 print("\n🚀 Iniciando App Original...")
                 print("📱 Abre tu navegador en: http://localhost:8501")
-                subprocess.run([sys.executable, "-m", "streamlit", "run", "app.py", "--server.port", "8501"])
+                subprocess.run([sys.executable, "-m", "streamlit", "run", "frontend/apps/app.py", "--server.port", "8501"])
                 break
                 
             else:

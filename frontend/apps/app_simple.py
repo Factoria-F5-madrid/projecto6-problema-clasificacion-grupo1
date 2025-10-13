@@ -13,7 +13,8 @@ import sys
 from PIL import Image
 
 # Add backend to path
-sys.path.append('backend')
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(project_root, 'backend'))
 
 # Import our ultimate system
 from models.ultimate_hybrid_system import UltimateHybridSystem

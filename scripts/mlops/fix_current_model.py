@@ -4,7 +4,8 @@ Script para arreglar el modelo actual con métricas correctas
 """
 
 import sys
-sys.path.append('backend')
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
 
 from mlops.auto_model_replacement import AutoModelReplacement
 
