@@ -2,11 +2,13 @@ services:
   - type: web
     name: hate-speech-detector
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run frontend/apps/app_organized.py --server.port $PORT --server.address 0.0.0.0
+    buildCommand: pip install -r requirements.txt && python scripts/database/init_database.py || echo "Database init failed - continuing without persistent logs"
+    startCommand: python start_render.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: PORT
+        value: $PORT
       - key: STREAMLIT_SERVER_PORT
         value: $PORT
       - key: STREAMLIT_SERVER_ADDRESS
