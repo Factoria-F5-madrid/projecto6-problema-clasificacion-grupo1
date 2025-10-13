@@ -60,7 +60,6 @@ def main():
         "Selecciona una función:",
         [
             "🏠 Detector Principal",
-            "📊 Comparación de Modelos", 
             "🧪 Casos de Prueba",
             "📈 Métricas del Sistema",
             "🔬 A/B Testing (MLOps)",
@@ -74,10 +73,6 @@ def main():
     with st.spinner("🔄 Cargando sistemas..."):
         systems = load_systems()
     
-    if systems is None:
-        st.error("❌ No se pudieron cargar los sistemas")
-        return
-    
     # Load A/B Testing system
     @st.cache_resource
     def load_ab_system():
@@ -87,15 +82,22 @@ def main():
     
     # Route to selected page
     if menu == "🏠 Detector Principal":
-        detector_page(systems['Final'])
-    elif menu == "📊 Comparación de Modelos":
-        comparison_page(systems)
+        if systems is None:
+            st.error("❌ No se pudieron cargar los sistemas")
+        else:
+            detector_page(systems['Final'])
     elif menu == "🧪 Casos de Prueba":
-        test_page(systems['Final'])
+        if systems is None:
+            st.error("❌ No se pudieron cargar los sistemas")
+        else:
+            test_page(systems['Final'])
     elif menu == "📈 Métricas del Sistema":
         metrics_page()
     elif menu == "🔬 A/B Testing (MLOps)":
-        ab_testing_page(systems, ab_system)
+        if systems is None:
+            st.error("❌ No se pudieron cargar los sistemas")
+        else:
+            ab_testing_page(systems, ab_system)
     elif menu == "📊 Data Drift Monitoring (MLOps)":
         data_drift_page()
     elif menu == "🔄 Auto-reemplazo de Modelos (MLOps)":
@@ -121,24 +123,6 @@ def detector_page(system):
             analyze_text(system, text_input)
         else:
             st.warning("⚠️ Por favor, ingresa algún texto para analizar")
-
-def comparison_page(systems):
-    """Página de comparación de modelos"""
-    st.header("📊 Comparación de Modelos")
-    st.markdown("**Compara el rendimiento de diferentes sistemas**")
-    
-    # Input
-    text_input = st.text_area(
-        "Ingresa el texto a comparar:",
-        placeholder="Escribe aquí el texto para comparar entre modelos...",
-        height=100
-    )
-    
-    if st.button("🔄 Comparar Modelos", type="primary"):
-        if text_input.strip():
-            compare_models(systems, text_input)
-        else:
-            st.warning("⚠️ Por favor, ingresa algún texto para comparar")
 
 def test_page(system):
     """Página de casos de prueba"""
@@ -275,73 +259,6 @@ def analyze_text(system, text):
     # Explanation
     st.markdown("**💡 Explicación:**")
     st.info(result['explanation'])
-
-def compare_models(systems, text):
-    """Compara el texto entre diferentes modelos"""
-    
-    st.markdown("---")
-    st.header("📊 Comparación de Modelos")
-    
-    results = {}
-    
-    for name, system in systems.items():
-        with st.spinner(f"🔄 Analizando con {name}..."):
-            try:
-                # Usar el método correcto según el tipo de sistema
-                if hasattr(system, 'detect_hate_speech'):
-                    result = system.detect_hate_speech(text)
-                elif hasattr(system, 'predict_ensemble'):
-                    # Para AdvancedHybridSystem
-                    prediction = system.predict_ensemble(text)
-                    result = {
-                        'prediction': prediction,
-                        'confidence': 0.85,  # Valor por defecto
-                        'method': 'ensemble'
-                    }
-                elif hasattr(system, 'predict'):
-                    result = system.predict(text)
-                else:
-                    st.error(f"Sistema {name} no tiene método de predicción válido")
-                    results[name] = None
-                    continue
-                    
-                results[name] = result
-            except Exception as e:
-                st.error(f"Error con {name}: {e}")
-                results[name] = None
-    
-    # Display comparison
-    if results:
-        comparison_data = []
-        
-        for name, result in results.items():
-            if result:
-                # Verificar estructura del resultado
-                if isinstance(result, dict):
-                    prediction = result.get('prediction', 'N/A')
-                    confidence = result.get('confidence', 0)
-                    method = result.get('method', 'N/A')
-                else:
-                    st.error(f"Resultado inesperado para {name}: {type(result)}")
-                    continue
-                
-                comparison_data.append({
-                    'Modelo': name,
-                    'Clasificación': prediction,
-                    'Confianza': f"{confidence:.1%}" if isinstance(confidence, (int, float)) else str(confidence),
-                    'Método': str(method).replace('_', ' ').title()
-                })
-        
-        if comparison_data:
-            df = pd.DataFrame(comparison_data)
-            st.dataframe(df, use_container_width=True)
-            
-            # Agreement analysis
-            classifications = [r['prediction'] for r in results.values() if r]
-            if len(set(classifications)) == 1:
-                st.success("✅ Todos los modelos están de acuerdo")
-            else:
-                st.warning("⚠️ Los modelos no están de acuerdo")
 
 def ab_testing_page(systems, ab_system):
     """Página de A/B Testing para MLOps"""
